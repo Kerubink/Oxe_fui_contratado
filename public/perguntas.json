@@ -1,0 +1,111 @@
+{
+    "inicio": [
+      {
+        "id": "apresentacao_pessoal",
+        "variacoes": {
+          "analitico": [
+            "Você pode descrever sua trajetória profissional destacando os projetos mais desafiadores que enfrentou?",
+            "Quais métricas você considera ao avaliar o sucesso de um projeto?"
+          ],
+          "comunicativo": [
+            "Como suas habilidades de comunicação contribuíram para sua carreira até agora?",
+            "Pode compartilhar uma experiência em que a comunicação eficaz foi crucial para o sucesso?"
+          ],
+          "direto": [
+            "Fale brevemente sobre sua experiência profissional.",
+            "Quais são suas principais qualificações para esta vaga?"
+          ]
+        }
+      },
+      {
+        "id": "motivacao_vaga",
+        "variacoes": {
+          "analitico": [
+            "Quais aspectos técnicos desta vaga chamaram sua atenção?",
+            "Como esta posição se alinha com seus objetivos de carreira?"
+          ],
+          "comunicativo": [
+            "O que mais te atraiu nesta oportunidade?",
+            "Pode compartilhar o que te motivou a se candidatar para esta vaga?"
+          ],
+          "direto": [
+            "Por que você quer esta vaga?",
+            "O que te motivou a se candidatar?"
+          ]
+        }
+      }
+    ],
+    "meio": [
+      {
+        "id": "resolucao_problemas",
+        "variacoes": {
+          "analitico": [
+            "Descreva um problema técnico complexo que você resolveu e como abordou a solução.",
+            "Quais ferramentas você utiliza para diagnosticar e resolver problemas em seus projetos?"
+          ],
+          "comunicativo": [
+            "Pode compartilhar uma situação em que a colaboração em equipe foi essencial para resolver um desafio?",
+            "Como você comunica problemas técnicos para membros não técnicos da equipe?"
+          ],
+          "direto": [
+            "Conte-me sobre um problema que você resolveu recentemente.",
+            "Qual foi o maior desafio que enfrentou em seu último projeto?"
+          ]
+        }
+      },
+      {
+        "id": "trabalho_em_equipe",
+        "variacoes": {
+          "analitico": [
+            "Como você avalia a eficácia de sua equipe em projetos anteriores?",
+            "Quais estratégias você utiliza para melhorar a colaboração em equipe?"
+          ],
+          "comunicativo": [
+            "Pode compartilhar uma experiência positiva trabalhando em equipe?",
+            "Como você contribui para um ambiente de trabalho colaborativo?"
+          ],
+          "direto": [
+            "Você prefere trabalhar sozinho ou em equipe?",
+            "Como você lida com conflitos em equipe?"
+          ]
+        }
+      }
+    ],
+    "encerramento": [
+      {
+        "id": "disponibilidade",
+        "variacoes": {
+          "analitico": [
+            "Quais são suas expectativas em relação ao cronograma e à carga de trabalho desta posição?",
+            "Como você gerencia seu tempo para cumprir prazos apertados?"
+          ],
+          "comunicativo": [
+            "Você está disponível para iniciar imediatamente, ou precisa cumprir algum aviso prévio?",
+            "Como você se adapta a mudanças de cronograma ou prioridades?"
+          ],
+          "direto": [
+            "Quando você pode começar?",
+            "Tem alguma restrição de horário?"
+          ]
+        }
+      },
+      {
+        "id": "expectativas_salariais",
+        "variacoes": {
+          "analitico": [
+            "Com base no mercado e na sua experiência, qual seria sua expectativa salarial?",
+            "Como você determina o valor adequado para sua remuneração?"
+          ],
+          "comunicativo": [
+            "Qual faixa salarial você considera justa para esta posição?",
+            "Pode compartilhar suas expectativas em relação à remuneração?"
+          ],
+          "direto": [
+            "Qual é sua pretensão salarial?",
+            "Quanto você espera ganhar?"
+          ]
+        }
+      }
+    ]
+  }
+  
