@@ -1,5 +1,4 @@
 // src/pages/InterviewScreen.jsx
-
 import { useState, useEffect, useRef } from "react";
 import StartScreen from "../components/interviewPage/StartScreen";
 import InterviewHeader from "../components/interviewPage/InterviewHeader";
@@ -7,6 +6,8 @@ import VideoSection from "../components/interviewPage/VideoSection";
 import ChatPanel from "../components/interviewPage/ChatPanel";
 import ControlsFooter from "../components/interviewPage/ControlsFooter";
 import localforage from "localforage";
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 export default function InterviewScreen() {
   const [roteiro, setRoteiro] = useState(null);
@@ -18,193 +19,193 @@ export default function InterviewScreen() {
   const [transcript, setTranscript] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [interviewStarted, setInterviewStarted] = useState(false);
-  
+  const [ttsPlaying, setTtsPlaying] = useState(false);
+  const [awaitingResponse, setAwaitingResponse] = useState(false);
+
   const videoRef = useRef(null);
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
 
-  // Inicializa STT e carrega roteiro
+  // 1) Monta SpeechRecognition mas não inicia
   useEffect(() => {
-    if (!interviewStarted) return;
+    if (!interviewStarted || !SR) return;
+    const rec = new SR();
+    rec.lang = "pt-BR";
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = (e) => {
+      let text = "";
+      for (let i = 0; i < e.results.length; i++) {
+        text += e.results[i][0].transcript;
+      }
+      setTranscript(text.trim());
+    };
+    rec.onend = () => {
+      // só reinicia se o usuário ainda quiser transcrever
+      if (micOn && awaitingResponse && !ttsPlaying) rec.start();
+    };
+    rec.onerror = (err) => {
+      console.error("STT error:", err);
+      setMicOn(false);
+    };
+    recognitionRef.current = rec;
 
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SR) {
-      const recog = new SR();
-      recog.lang = "pt-BR";
-      recog.continuous = true;
-      recog.interimResults = true;
-      recog.onresult = (e) => {
-        let interim = "";
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const res = e.results[i];
-          if (res.isFinal) {
-            setTranscript(prev => prev + res[0].transcript.trim() + " ");
-          } else {
-            interim += res[0].transcript;
-          }
-        }
-        if (interim) setTranscript(prev => prev + interim);
-      };
-      recog.onend = () => micOn && recog.start();
-      recognitionRef.current = recog;
-    }
-
-    // Carrega roteiro
+    // carrega roteiro
     (async () => {
-      const r = await localforage.getItem("roteiroEntrevista");
-      if (r) setRoteiro([...r.inicio, ...r.meio, ...r.tecnicas, ...r.encerramento]);
+      const stored = await localforage.getItem("roteiroEntrevista");
+      if (stored) {
+        setRoteiro([
+          ...stored.inicio,
+          ...stored.meio,
+          ...stored.tecnicas,
+          ...stored.encerramento
+        ]);
+      }
     })();
   }, [interviewStarted]);
 
-  // Função para iniciar a entrevista
-  const startInterview = async () => {
-    try {
-      // Solicitar permissão de mídia
-      await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setInterviewStarted(true);
-      
-      // Iniciar vídeo
-      if (videoRef.current) {
-        videoRef.current.play().catch(console.error);
-      }
-    } catch (error) {
-      console.error('Permissão negada:', error);
-      alert('Por favor, permita acesso à câmera e microfone!');
+  // 2) Controla o STT **só** quando o usuário ativa o mic 
+  //     e TTS já terminou (awaitingResponse)
+  useEffect(() => {
+    const rec = recognitionRef.current;
+    if (!rec) return;
+    if (micOn && awaitingResponse && !ttsPlaying) {
+      setTranscript("");
+      rec.start();
+    } else {
+      rec.stop();
     }
-  };
+  }, [micOn, awaitingResponse, ttsPlaying]);
 
-  // Função para reproduzir áudio usando Google TTS
+  // 3) TTS que aguarda a API e sinaliza quando termina
   const playTTS = async (text) => {
-    try {
-      if (!text || !interviewStarted) return;
-
-      // Limitar texto para 200 caracteres
-      const limitedText = text.slice(0, 200);
-
-      // Chamar a API local
-      const response = await fetch(`/api/tts?text=${encodeURIComponent(limitedText)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`);
-      }
-
-      // Criar blob de áudio
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Parar áudio anterior e reproduzir novo
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current = new Audio(audioUrl);
-      
-      await audioRef.current.play().catch(err => {
-        console.error('Erro na reprodução:', err);
-        alert('Clique na tela para permitir áudio!');
-      });
-
-    } catch (error) {
-      console.error('Erro no TTS:', error);
-      alert('Erro ao carregar áudio. Tente novamente.');
-    }
+    setTtsPlaying(true);
+    const snippet = encodeURIComponent(text.slice(0, 200));
+    const res = await fetch(`/api/tts?text=${snippet}`);
+    if (!res.ok) throw new Error("TTS error");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    if (audioRef.current) audioRef.current.pause();
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    await new Promise((resolve, reject) => {
+      audio.addEventListener("ended", resolve, { once: true });
+      audio.addEventListener("error", reject, { once: true });
+      audio.play().catch(reject);
+    });
+    setTtsPlaying(false);
   };
 
-  // Dispara TTS ao mudar de pergunta
+  // 4) Dispara pergunta via chat + TTS, depois libera resposta
   useEffect(() => {
     if (!roteiro || idx >= roteiro.length) return;
-
-    const handleQuestion = async () => {
+    (async () => {
       const pergunta = roteiro[idx].pergunta;
-      pushChat("Entrevistador", pergunta);
-      await playTTS(pergunta);
-      
-      if (recognitionRef.current) {
-        recognitionRef.current.start();
-        setMicOn(true);
-      }
+      setChat(c => [...c, { sender: "Entrevistador", text: pergunta }]);
+      setAwaitingResponse(false);
+      setMicOn(false);
       setTranscript("");
-    };
 
-    handleQuestion();
+      try {
+        await playTTS(pergunta);
+      } catch {
+        const u = new SpeechSynthesisUtterance(pergunta);
+        u.lang = "pt-BR";
+        speechSynthesis.speak(u);
+        await new Promise(r => { u.onend = r; });
+      }
+
+      // agora liberamos o STT: usuário precisa clicar 
+      setAwaitingResponse(true);
+    })();
   }, [roteiro, idx]);
 
-  // Configura câmera
+  // 5) Toggle câmera
   useEffect(() => {
     if (!interviewStarted) return;
-
     if (camOn) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: false })
-        .then((s) => (videoRef.current.srcObject = s))
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(s => videoRef.current.srcObject = s)
         .catch(console.error);
     } else {
-      const s = videoRef.current.srcObject;
-      s?.getTracks().forEach((t) => t.stop());
+      videoRef.current.srcObject?.getTracks().forEach(t => t.stop());
       videoRef.current.srcObject = null;
     }
   }, [camOn, interviewStarted]);
 
-  // Funções auxiliares
-  const pushChat = (sender, text) =>
-    setChat((c) => [...c, { sender, text }]);
-
-  const handleSend = () => {
-    if (isSending || !transcript.trim()) return;
+  // 6) Envia resposta ao desligar mic ou botão manual
+  const sendResponse = async () => {
+    if (isSending) return;
+    const ans = transcript.trim();
+    if (!ans) return;
     setIsSending(true);
-
-    const txt = transcript.trim();
-    recognitionRef.current?.stop();
     setMicOn(false);
-    pushChat("Você", txt);
-    setIdx((i) => i + 1);
+
+    setChat(c => [...c, { sender: "Você", text: ans }]);
+
+    const stored = await localforage.getItem("roteiroEntrevista");
+    if (stored) {
+      const lenI = stored.inicio.length,
+            lenM = stored.meio.length,
+            lenT = stored.tecnicas.length;
+      let phase, li;
+      if (idx < lenI) { phase = "inicio"; li = idx; }
+      else if (idx < lenI+lenM) { phase = "meio"; li = idx - lenI; }
+      else if (idx < lenI+lenM+lenT) { phase = "tecnicas"; li = idx - lenI - lenM; }
+      else { phase = "encerramento"; li = idx - lenI - lenM - lenT; }
+      stored[phase][li].resposta = ans;
+      await localforage.setItem("roteiroEntrevista", stored);
+    }
+
+    setIdx(i => i+1);
     setIsSending(false);
   };
 
-  const toggleMic = () => {
+  // 7) Handler do botão de mic
+  const onMicToggle = () => {
     if (micOn) {
-      recognitionRef.current?.stop();
-      setMicOn(false);
-      handleSend();
+      sendResponse();
     } else {
-      setTranscript("");
-      recognitionRef.current?.start();
       setMicOn(true);
     }
   };
 
-  return (
-    <>
-      {!interviewStarted ? (
-        <StartScreen onStart={startInterview} />
-      ) : (
-        <div className="h-screen w-screen flex flex-col bg-neutral-900">
-          <audio ref={audioRef} hidden />
-          
-          <InterviewHeader />
-          
-          <div className="flex flex-1 p-2">
-            <VideoSection videoRef={videoRef} />
-            
-            <ChatPanel
-              chatVisible={chatVisible}
-              chat={chat}
-              transcript={transcript}
-              isSending={isSending}
-              setTranscript={setTranscript}
-              handleSend={handleSend}
-            />
-          </div>
+  // 8) Inicia a simulação
+  const startInterview = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setInterviewStarted(true);
+    } catch {
+      alert("Permita câmera e microfone para continuar.");
+    }
+  };
 
-          <ControlsFooter
-            micOn={micOn}
-            camOn={camOn}
-            chatVisible={chatVisible}
-            toggleMic={toggleMic}
-            setCamOn={setCamOn}
-            setChatVisible={setChatVisible}
-          />
-        </div>
-      )}
-    </>
+  // Render
+  if (!interviewStarted) return <StartScreen onStart={startInterview} />;
+
+  return (
+    <div className="h-screen flex flex-col bg-neutral-900">
+      <audio ref={audioRef} hidden />
+      <InterviewHeader />
+      <div className="flex flex-1 p-2">
+        <VideoSection videoRef={videoRef} />
+        <ChatPanel
+          chatVisible={chatVisible}
+          chat={chat}
+          transcript={transcript}
+          setTranscript={setTranscript}
+          handleSend={sendResponse}
+          isSending={isSending}
+        />
+      </div>
+      <ControlsFooter
+        micOn={micOn}
+        camOn={camOn}
+        chatVisible={chatVisible}
+        toggleMic={onMicToggle}
+        setCamOn={setCamOn}
+        setChatVisible={setChatVisible}
+      />
+    </div>
   );
 }
