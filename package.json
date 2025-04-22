@@ -18,6 +18,7 @@
     "compromise-sentences": "^0.3.0",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.503.0",
     "ml-distance": "^4.0.1",
     "natural": "^8.0.1",
     "node-summarizer": "^1.0.7",
