@@ -3,6 +3,9 @@ import MainLayout from './components/layout/MainLayout.jsx';
 import HomePage from './pages/HomePage';
 import InterviewConfig from './pages/InterviewConfig';
 import InterviewScreen from './pages/InterviewScreen';
+import EntrevistaLoading from './pages/EntrevistaLoading.jsx';
+import VideoCheck from './pages/VideoCheck.jsx';
+import SalaDeEntrada from './pages/SalaDeEntrada.jsx';
 
 const router = createBrowserRouter([
   {
@@ -20,7 +23,19 @@ const router = createBrowserRouter([
     element: <InterviewConfig />
   },
   {
-    path: '/interview',
+    path: '/loading',
+    element: <EntrevistaLoading />
+  },
+  {
+    path: '/video-check',
+    element: <VideoCheck />
+  },
+  {
+    path: '/sala',
+    element: <SalaDeEntrada />
+  },
+  {
+    path: '/entrevista',
     element: <InterviewScreen />
   }
 ]);
