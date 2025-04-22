@@ -1,16 +1,11 @@
 // src/pages/InterviewScreen.jsx
 
 import { useState, useEffect, useRef } from "react";
-import {
-  ShieldCheck,
-  Grid3x3,
-  Mic,
-  MicOff,
-  Camera,
-  CameraOff,
-  MessageSquare,
-  Play,
-} from "lucide-react";
+import StartScreen from "../components/interviewPage/StartScreen";
+import InterviewHeader from "../components/interviewPage/InterviewHeader";
+import VideoSection from "../components/interviewPage/VideoSection";
+import ChatPanel from "../components/interviewPage/ChatPanel";
+import ControlsFooter from "../components/interviewPage/ControlsFooter";
 import localforage from "localforage";
 
 export default function InterviewScreen() {
@@ -177,137 +172,39 @@ export default function InterviewScreen() {
     }
   };
 
-  // Tela de início
-  if (!interviewStarted) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-neutral-900 gap-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Simulador de Entrevista</h1>
-          <p className="text-white/80">Clique abaixo para iniciar quando estiver pronto</p>
-        </div>
-        <button 
-          onClick={startInterview}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl transition-all"
-        >
-          <Play size={28} />
-          <span className="text-lg">Iniciar Simulação</span>
-        </button>
-        <div className="text-sm text-white/60 mt-4 flex items-center gap-2">
-          <ShieldCheck size={18} />
-          <span>Sua privacidade e segurança são importantes para nós</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Tela principal da entrevista
   return (
-    <div className="h-screen w-screen flex flex-col bg-neutral-900">
-      <audio ref={audioRef} hidden />
-      
-      <header className="flex items-center justify-between p-2">
-        <div className="flex items-center gap-1 text-white">
-          <ShieldCheck />
-          <span className="font-semibold">Sala segura, oxe!</span>
-        </div>
-        <button className="flex items-center gap-1 rounded-lg bg-blue-700 p-1.5 text-white hover:bg-blue-800">
-          <Grid3x3 size={20} /> View
-        </button>
-      </header>
-
-      <div className="flex flex-1 p-2">
-        <div className="flex-1 flex items-center justify-center gap-4">
-          <div className="flex flex-col items-center bg-gray-800 rounded-lg p-4 w-1/3">
-            <img
-              src="/entrevistador.jpg"
-              alt="Entrevistador"
-              className="w-32 h-32 rounded-full border-2 border-blue-500"
-            />
-            <span className="mt-2 text-white">Entrevistador</span>
-          </div>
+    <>
+      {!interviewStarted ? (
+        <StartScreen onStart={startInterview} />
+      ) : (
+        <div className="h-screen w-screen flex flex-col bg-neutral-900">
+          <audio ref={audioRef} hidden />
           
-          <div className="flex flex-col items-center bg-gray-800 rounded-lg p-4 w-1/3">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-32 h-32 bg-black rounded-lg"
-            />
-            <span className="mt-2 text-white">
-              {localStorage.getItem("usuarioNome") || "Você"}
-            </span>
-          </div>
-        </div>
-
-        {chatVisible && (
-          <div className="w-1/4 flex flex-col border-l border-gray-700 bg-neutral-800">
-            <header className="bg-blue-800 p-2 text-white text-center">
-              Chat da chamada
-            </header>
-            <div className="flex-1 overflow-y-auto p-2">
-              {chat.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`mb-2 flex ${msg.sender === "Você" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`inline-block rounded-lg px-3 py-1 ${
-                      msg.sender === "Você" 
-                        ? "bg-blue-600 text-white" 
-                        : "bg-gray-700 text-white"
-                    }`}
-                  >
-                    <strong className="block text-xs opacity-75">
-                      {msg.sender}
-                    </strong>
-                    <span>{msg.text}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <InterviewHeader />
+          
+          <div className="flex flex-1 p-2">
+            <VideoSection videoRef={videoRef} />
             
-            <div className="bg-neutral-700 p-2 flex flex-col">
-              <textarea
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
-                rows={4}
-                className="w-full p-2 rounded resize-none mb-2"
-                placeholder="Fale sua resposta..."
-              />
-              <button
-                onClick={handleSend}
-                disabled={isSending}
-                className="bg-blue-600 text-white py-1 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isSending ? "Enviando..." : "Enviar Resposta"}
-              </button>
-            </div>
+            <ChatPanel
+              chatVisible={chatVisible}
+              chat={chat}
+              transcript={transcript}
+              isSending={isSending}
+              setTranscript={setTranscript}
+              handleSend={handleSend}
+            />
           </div>
-        )}
-      </div>
 
-      <footer className="relative bg-blue-950 flex justify-center items-center p-2 text-white">
-        <div className="flex gap-8">
-          <button onClick={toggleMic} className="flex flex-col items-center">
-            {micOn ? <Mic size={24} /> : <MicOff size={24} />}
-            <span>{micOn ? "Mic On" : "Mic Off"}</span>
-          </button>
-          <button
-            onClick={() => setCamOn((c) => !c)}
-            className="flex flex-col items-center"
-          >
-            {camOn ? <Camera size={24} /> : <CameraOff size={24} />}
-            <span>{camOn ? "Cam On" : "Cam Off"}</span>
-          </button>
+          <ControlsFooter
+            micOn={micOn}
+            camOn={camOn}
+            chatVisible={chatVisible}
+            toggleMic={toggleMic}
+            setCamOn={setCamOn}
+            setChatVisible={setChatVisible}
+          />
         </div>
-        <button
-          onClick={() => setChatVisible((v) => !v)}
-          className="absolute right-4 flex flex-col items-center"
-        >
-          <MessageSquare size={24} />
-          <span>{chatVisible ? "Ocultar Chat" : "Mostrar Chat"}</span>
-        </button>
-      </footer>
-    </div>
+      )}
+    </>
   );
 }
