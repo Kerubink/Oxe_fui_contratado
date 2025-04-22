@@ -15,6 +15,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 export default function InterviewConfig() {
   const [cvRaw, setCvRaw] = useState("");
   const [cvSummary, setCvSummary] = useState("");
+  const [jobTitle, setJobTitle] = useState("");             // Novo estado
+  const [company, setCompany] = useState("");               // Novo estado
   const [jobDesc, setJobDesc] = useState("");
   const [jobDescSummary, setJobDescSummary] = useState("");
   const [personality, setPersonality] = useState("mentor");
@@ -22,8 +24,7 @@ export default function InterviewConfig() {
   const navigate = useNavigate();
 
   const extractTextFromPdf = async (buffer) => {
-    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) })
-      .promise;
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
     let fullText = "";
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
@@ -67,8 +68,15 @@ export default function InterviewConfig() {
       alert("Aguarde o processamento do CV.");
       return;
     }
+    if (!jobTitle.trim() || !company.trim()) {
+      alert("Preencha Cargo e Empresa.");
+      return;
+    }
+
     const ficha = {
       cvSummary,
+      jobTitle,        // agora salvo
+      company,         // agora salvo
       jobDescSummary,
       interviewer: {
         ...personalityOptions[personality].interviewer,
@@ -79,12 +87,14 @@ export default function InterviewConfig() {
       },
       timestamp: Date.now(),
     };
+
     await localforage.setItem("fichaEntrevista", ficha);
     navigate("/loading", { state: { ficha } });
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+      {/* CV (PDF) */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           CV (PDF)
@@ -98,19 +108,37 @@ export default function InterviewConfig() {
         {loading && <p className="text-sm text-gray-500">Processando PDF...</p>}
       </div>
 
-      {/* {cvSummary && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Resumo do CV (ajuste se quiser)
-          </label>
-          <textarea
-            value={cvSummary}
-            onChange={(e) => setCvSummary(e.target.value)}
-            className="w-full h-32 p-2 border rounded-lg"
-          />
-        </div>
-      )} */}
+      {/* Cargo */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Cargo Desejado
+        </label>
+        <input
+          type="text"
+          value={jobTitle}
+          onChange={(e) => setJobTitle(e.target.value)}
+          className="w-full p-2 border rounded-lg"
+          placeholder="Ex: Desenvolvedor Front‑end"
+          required
+        />
+      </div>
 
+      {/* Empresa */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Empresa
+        </label>
+        <input
+          type="text"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          className="w-full p-2 border rounded-lg"
+          placeholder="Ex: TechCorp"
+          required
+        />
+      </div>
+
+      {/* Descrição da Vaga */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Descrição da Vaga
@@ -119,23 +147,12 @@ export default function InterviewConfig() {
           value={jobDesc}
           onChange={handleJobDescChange}
           className="w-full h-32 p-2 border rounded-lg"
+          placeholder="Cole aqui a descrição completa da vaga"
           required
         />
       </div>
 
-      {/* {jobDescSummary && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Resumo da Vaga (ajuste se quiser)
-          </label>
-          <textarea
-            value={jobDescSummary}
-            onChange={(e) => setJobDescSummary(e.target.value)}
-            className="w-full h-24 p-2 border rounded-lg"
-          />
-        </div>
-      )} */}
-
+      {/* Perfil do Entrevistador */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Perfil do Entrevistador
@@ -153,6 +170,7 @@ export default function InterviewConfig() {
         </select>
       </div>
 
+      {/* Botão */}
       <button
         type="submit"
         className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"

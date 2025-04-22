@@ -18,7 +18,7 @@ export const personalityOptions = {
     interviewer: {
       name: 'Ricardo Almeida',
       gender: 'Masculino',
-      traits: ['Analítico', 'Visionário', 'Decisivo', 'Exigente'],
+      traits: ['analitico', 'visionario', 'decisivo', 'exigente'],
       description: "Diretor de inovação que prioriza pensamento estratégico. Costuma criar cenários complexos durante a entrevista."
     }
   },
@@ -29,7 +29,7 @@ export const personalityOptions = {
     interviewer: {
       name: 'Fernanda Castro',
       gender: 'Feminino',
-      traits: ['Energético', 'Persuasivo', 'Adaptável', 'Curioso'],
+      traits: ['energetico', 'persuasivo', 'adaptavel', 'curioso'],
       description: "Head de Produto em startup aceleradora. Testa capacidade de improviso com mudanças bruscas de contexto."
     }
   },
@@ -40,7 +40,7 @@ export const personalityOptions = {
     interviewer: {
       name: 'Dr. Carlos Mendes',
       gender: 'Masculino',
-      traits: ['Metódico', 'Preciso', 'Analítico', 'Detalhista'],
+      traits: ['metodico', 'preciso', 'analitico', 'detalhista'],
       description: "Arquiteto de sistemas com foco em soluções otimizadas. Perguntas técnicas profundas e casos extremos."
     }
   },
@@ -51,7 +51,7 @@ export const personalityOptions = {
     interviewer: {
       name: 'Mariana Lima',
       gender: 'Feminino',
-      traits: ['Diplomática', 'Empática', 'Colaborativa', 'Observadora'],
+      traits: ['diplomatica', 'empatica', 'colaborativa', 'observadora'],
       description: "HRBP sênior especialista em fit cultural. Simula conflitos de equipe para avaliar soft skills."
     }
   },
@@ -62,7 +62,7 @@ export const personalityOptions = {
     interviewer: {
       name: 'Roberto Nascimento',
       gender: 'Masculino',
-      traits: ['Prático', 'Direto', 'Decisivo', 'Orientado a Resultados'],
+      traits: ['pratico', 'direto', 'decisivo', 'orientado a resultados'],
       description: "Gerente de operações que testa capacidade de ação sob pressão com perguntas curtas e objetivas."
     }
   }
