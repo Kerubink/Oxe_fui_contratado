@@ -20,6 +20,7 @@
     "compromise-sentences": "^0.3.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "face-api.js": "^0.22.2",
     "google-tts-api": "^2.0.2",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",

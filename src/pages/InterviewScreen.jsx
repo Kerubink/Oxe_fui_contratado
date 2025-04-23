@@ -21,6 +21,7 @@ export default function InterviewScreen() {
     toggleMic,
     sendResponse,
     isSending,
+    userVisible,
     startInterview,
     interviewStarted,
   } = useInterviewEngine();
@@ -32,7 +33,7 @@ export default function InterviewScreen() {
       <audio ref={audioRef} hidden />
       <InterviewHeader />
       <div className="flex flex-1 gap-2 p-2">
-        <VideoSection videoRef={videoRef} />
+        <VideoSection videoRef={videoRef} userVisible={userVisible} />
         <ChatPanel
           chatVisible={chatVisible}
           chat={chat}
