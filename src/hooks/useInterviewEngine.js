@@ -30,11 +30,21 @@ export function useInterviewEngine() {
     micOn,
     setMicOn,
     recognitionRef
+    
   } = useSpeechRecognition({ awaitingResponse, ttsPlaying });
 
   useCamera(videoRef, camOn, interviewStarted);
-  const { userVisible } = useFaceMonitor(videoRef, camOn, interviewStarted, playTTS);
-
+  const { userVisible } = useFaceMonitor(
+    videoRef,
+    camOn,
+    interviewStarted,
+    playTTS,
+    micOn,
+    transcript,
+    awaitingResponse
+  );
+  
+  
   // 🔁 Avança as perguntas do roteiro
   useEffect(() => {
     if (!roteiro || idx >= roteiro.length) return;
