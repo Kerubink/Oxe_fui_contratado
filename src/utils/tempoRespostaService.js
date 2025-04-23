@@ -54,7 +54,7 @@ const traitMultiplicadores = {
    */
   export function calcularTempoParaResposta(pergunta, traits = [], tipo = 'tecnica_simples') {
     const numPalavras = pergunta.trim().split(/\s+/).length;
-    const tempoBase = numPalavras * 0.6;
+    const tempoBase = numPalavras * 0.9;
   
     const traitMults = traits.map((trait) =>
       traitMultiplicadores[trait.replaceAll(" ", "_")] || 1.0
