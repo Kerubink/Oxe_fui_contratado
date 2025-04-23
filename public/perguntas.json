@@ -2,6 +2,7 @@
     "inicio": [
       {
         "id": "apresentacao_pessoal",
+        "tipo": "apresentacao",
         "variacoes": {
           "assertivo": [
             "Resuma sua trajetória em 3 pontos-chave que justifiquem sua contratação.",
@@ -123,6 +124,7 @@
       },
       {
         "id": "motivacao_vaga",
+        "tipo": "apresentacao",
         "variacoes": {
           "empatico": [
             "Quais aspectos técnicos desta vaga chamaram sua atenção?",

@@ -1,5 +1,6 @@
 import localforage from 'localforage';
 import { sortearPerguntaPorTrait } from '../utils/sorteioPorTrait';
+import { calcularTempoParaResposta } from '../utils/tempoRespostaService';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_A_KEY;
 
@@ -72,7 +73,14 @@ export async function gerarRoteiroEntrevista(perguntasJson) {
   for (const secao of ['inicio', 'meio']) {
     for (const perguntaObj of perguntasJson[secao]) {
       const sel = sortearPerguntaPorTrait(perguntaObj, traits);
-      if (sel) roteiro[secao].push(sel);
+      if (sel) {
+        // Calcular tempo de resposta
+        const tempoResposta = calcularTempoParaResposta(sel.pergunta, traits, 'apresentacao');
+        roteiro[secao].push({
+          pergunta: sel.pergunta,
+          tempoResposta
+        });
+      }
     }
   }
 
@@ -82,16 +90,26 @@ export async function gerarRoteiroEntrevista(perguntasJson) {
     vaga: ficha.jobDescSummary,
     perfil
   });
-  roteiro.tecnicas = tecnicas.map((p, i) => ({
-    id: `tecnica_${i + 1}`,
-    trait: 'IA',
-    pergunta: p
-  }));
+  roteiro.tecnicas = tecnicas.map((p, i) => {
+    const tempoResposta = calcularTempoParaResposta(p, traits, 'tecnica_simples');
+    return {
+      id: `tecnica_${i + 1}`,
+      trait: 'IA',
+      pergunta: p,
+      tempoResposta
+    };
+  });
 
   // 3) Sorteio de perguntas de encerramento
   for (const perguntaObj of perguntasJson.encerramento) {
     const sel = sortearPerguntaPorTrait(perguntaObj, traits);
-    if (sel) roteiro.encerramento.push(sel);
+    if (sel) {
+      const tempoResposta = calcularTempoParaResposta(sel.pergunta, traits, 'encerramento');
+      roteiro.encerramento.push({
+        pergunta: sel.pergunta,
+        tempoResposta
+      });
+    }
   }
 
   // 4) Salva o roteiro completo para uso posterior
