@@ -8,7 +8,7 @@ import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { summarizeText } from "../utils/summarizer";
 import { personalityOptions } from "../data/personalityOptions";
-import { possibleTraits } from "../data/traits";
+import { traitMappings, convertTraits } from '../data/traits';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -75,11 +75,13 @@ export default function InterviewConfig() {
 
     const ficha = {
       cvSummary,
-      jobTitle,        // agora salvo
-      company,         // agora salvo
+      jobTitle,
+      company,
       jobDescSummary,
       interviewer: {
         ...personalityOptions[personality].interviewer,
+        // Adicione a conversão dos traits
+        traits: convertTraits(personalityOptions[personality].interviewer.traits),
         level: personality,
         label: personalityOptions[personality].label,
         mbti: personalityOptions[personality].mbti,

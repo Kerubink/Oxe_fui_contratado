@@ -1,29 +1,32 @@
-/**
- * Sorteia uma única pergunta a partir de todas as variações
- * disponíveis para os traits do entrevistador.
- *
- * @param {Object} perguntaObj  — Objeto com { id, variacoes: { trait: [perguntas] } }
- * @param {string[]} traits     — Array de traits do entrevistador
- * @returns {{id: string, trait: string, pergunta: string}|null}
- */
+// src/utils/sorteioPorTrait.js
 export function sortearPerguntaPorTrait(perguntaObj, traits) {
   const { id, variacoes } = perguntaObj;
 
-  // 1) Acumula todas as perguntas de todos os traits válidos
-  const allOptions = [];
-  for (const trait of traits) {
-    const lista = variacoes[trait];
-    if (Array.isArray(lista)) {
-      for (const pergunta of lista) {
-        allOptions.push({ trait, pergunta });
-      }
-    }
-  }
+  // 1. Filtra variações compatíveis
+  const variaçõesCompatíveis = variacoes.filter(v => 
+    v.tags.some(tag => traits.includes(tag))
+  );
 
-  // 2) Se não houver nenhuma opção, retorna null
-  if (allOptions.length === 0) return null;
+  // 2. Fallback para universal
+  const variaçõesDisponíveis = variaçõesCompatíveis.length > 0 
+    ? variaçõesCompatíveis 
+    : variacoes.filter(v => v.tags.includes('universal'));
 
-  // 3) Sorteia uniformemente entre todas as opções
-  const chosen = allOptions[Math.floor(Math.random() * allOptions.length)];
-  return { id, trait: chosen.trait, pergunta: chosen.pergunta };
+  if (variaçõesDisponíveis.length === 0) return null;
+
+  // 3. Sorteia uma variação
+  const variaçãoSorteada = variaçõesDisponíveis[
+    Math.floor(Math.random() * variaçõesDisponíveis.length)
+  ];
+
+  // 4. Sorteia um texto dentro da variação
+  const textoSorteado = variaçãoSorteada.textos[
+    Math.floor(Math.random() * variaçãoSorteada.textos.length)
+  ];
+
+  return {
+    id,
+    tags: variaçãoSorteada.tags,
+    pergunta: textoSorteado
+  };
 }

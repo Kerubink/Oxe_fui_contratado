@@ -1,32 +1,38 @@
 // src/services/roteiroService.js
-
 import localforage from 'localforage';
 import { sortearPerguntaPorTrait } from '../utils/sorteioPorTrait';
 import { calcularTempoParaResposta } from '../utils/tempoRespostaService';
+import { traitMappings, convertTraits } from '../data/traits';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_A_KEY;
 
-/**
- * Gera exatamente 2 perguntas técnicas em uma única chamada à API Gemini.
- */
-async function gerarPerguntasTecnicas({ cv, vaga, perfil }) {
-  const prompt = `
-Você é um entrevistador técnico. Gere exatamente 2 perguntas específicas para esta entrevista.
-Use apenas as perguntas, sem explicações ou comentários.
+const secaoParaTipo = {
+  inicio: 'comportamental',
+  meio: 'situacional',
+  encerramento: 'fechamento'
+};
 
-Resumo do CV:
+async function gerarPerguntasTecnicas({ cv, vaga, perfil, traits }) {
+  const prompt = `
+Você é um entrevistador profissional. Gere exatamente 2 perguntas técnicas usando ESTES ELEMENTOS:
+
+**Perfil do Candidato:**
 ${cv}
 
-Resumo da vaga:
+**Requisitos da Vaga:**
 ${vaga}
 
-Perfil do entrevistador:
-${perfil}
+**Estilo do Entrevistador:**
+- Traits: ${traits.join(', ')}
+- Descrição: ${perfil}
 
-Formato da resposta:
-- Pergunta 1
-- Pergunta 2
-  `;
+**Instruções:**
+1. Combine hard skills e aspectos comportamentais
+2. Use termos técnicos específicos
+3. Formato rigoroso:
+   - Pergunta 1
+   - Pergunta 2
+  `.trim();
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
@@ -36,97 +42,72 @@ Formato da resposta:
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     }
   );
+  
   const data = await res.json();
-  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-  return raw
+  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  
+  return rawText
     .split('\n')
     .filter(line => line.trim().startsWith('-'))
-    .map(line => line.replace(/^-+\s*/, '').trim())
+    .map(line => line.replace(/^[-\d\.\s]+/, '').trim())
     .slice(0, 2);
 }
 
-/**
- * Mapeia seção do JSON para tipo de pergunta (fallback caso não venha no JSON).
- */
-const secaoParaTipo = {
-  inicio:        'apresentacao',
-  meio:          'situacional',
-  encerramento:  'encerramento'
-};
-
-/**
- * Gera e salva no IndexedDB o roteiro completo da entrevista:
- *  - Perguntas de início
- *  - Perguntas do meio
- *  - Perguntas técnicas (antes do encerramento)
- *  - Perguntas de encerramento
- */
 export async function gerarRoteiroEntrevista(perguntasJson) {
   const ficha = await localforage.getItem('fichaEntrevista');
   if (!ficha) throw new Error('Ficha de entrevista não encontrada.');
 
-  // Extrai traits de forma segura
-  const traits = Array.isArray(ficha.interviewer.traits)
-    ? ficha.interviewer.traits
-    : [];
+  const traitsAntigos = ficha.interviewer.traits || [];
+  const traitsNovos = convertTraits(traitsAntigos);
   const perfil = ficha.interviewer.description || '';
 
   const roteiro = {
-    inicio:       [],
-    meio:         [],
-    tecnicas:     [],
+    inicio: [],
+    meio: [],
+    tecnicas: [],
     encerramento: []
   };
 
-  /**
-   * Sorteia e empacota as perguntas genéricas (início, meio, encerramento).
-   */
-  function processarSecao(secao) {
-    const perguntasDaSecao = perguntasJson[secao] || [];
-    for (const perguntaObj of perguntasDaSecao) {
-      const selecionada = sortearPerguntaPorTrait(perguntaObj, traits);
-      if (!selecionada) continue;
-
-      // decide o tipo: primeiro cheque no JSON, senão use o mapeamento de seção
-      const tipoPergunta = perguntaObj.tipo || secaoParaTipo[secao] || 'tecnica_simples';
-
-      const tempoRespostaSugerido = calcularTempoParaResposta(
-        selecionada.pergunta,
-        traits,
-        tipoPergunta
-      );
+  const processarSecao = (secao) => {
+    perguntasJson[secao]?.forEach(perguntaObj => {
+      const resultado = sortearPerguntaPorTrait(perguntaObj, traitsNovos);
+      if (!resultado) return;
 
       roteiro[secao].push({
-        id:        perguntaObj.id,
-        trait:     selecionada.trait,
-        pergunta:  selecionada.pergunta,
-        tempoRespostaSugerido
+        id: perguntaObj.id,
+        tipo: perguntaObj.tipo || secaoParaTipo[secao],
+        tags: resultado.tags,
+        pergunta: resultado.pergunta,
+        tempoRespostaSugerido: calcularTempoParaResposta(
+          resultado.pergunta,
+          traitsAntigos,
+          perguntaObj.tipo || secaoParaTipo[secao]
+        )
       });
-    }
-  }
+    });
+  };
 
-  // 1) perguntas de início e meio
-  processarSecao('inicio');
-  processarSecao('meio');
+  ['inicio', 'meio', 'encerramento'].forEach(processarSecao);
 
-  // 2) perguntas técnicas (geradas pela IA, antes do encerramento)
   const tecnicas = await gerarPerguntasTecnicas({
-    cv:    ficha.cvSummary,
-    vaga:  ficha.jobDescSummary,
-    perfil
+    cv: ficha.cvSummary,
+    vaga: ficha.jobDescSummary,
+    perfil,
+    traits: traitsAntigos
   });
+
   roteiro.tecnicas = tecnicas.map((pergunta, idx) => ({
-    id:                     `tecnica_${idx + 1}`,
-    trait:                  'IA',
+    id: `tecnica_${idx + 1}`,
+    tipo: 'tecnica',
+    tags: ['IA', ...traitsNovos],
     pergunta,
-    tempoRespostaSugerido:  calcularTempoParaResposta(pergunta, traits, 'tecnica_simples')
+    tempoRespostaSugerido: calcularTempoParaResposta(
+      pergunta,
+      traitsAntigos,
+      'tecnica'
+    )
   }));
 
-  // 3) perguntas de encerramento
-  processarSecao('encerramento');
-
-  // 4) salva e retorna
   await localforage.setItem('roteiroEntrevista', roteiro);
   return roteiro;
 }

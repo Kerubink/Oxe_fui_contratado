@@ -1,217 +1,86 @@
 {
-    "inicio": [
-      {
-        "id": "apresentacao_pessoal",
-        "tipo": "apresentacao",
-        "variacoes": {
-          "assertivo": [
-            "Resuma sua trajetória em 3 pontos-chave que justifiquem sua contratação.",
-            "Quais resultados imediatos você pode entregar nos primeiros 90 dias aqui?"
+  "inicio": [
+    {
+      "id": "apresentacao_pessoal",
+      "tipo": "comportamental",
+      "variacoes": [
+        {
+          "textos": [
+            "Resuma sua trajetória em 3 pontos-chave que justifiquem sua contratação",
+            "Quais marcos profissionais comprovam sua aptidão para esta vaga?",
+            "Descreva sua jornada profissional como um roadmap de entregas relevantes"
           ],
-          "decisivo": [
-            "Qual decisão na sua carreira melhor preparou você para esta vaga?",
-            "Em 30 segundos: qual é o seu argumento mais forte para esta posição?"
+          "tags": ["dominancia", "julgamento"]
+        },
+        {
+          "textos": [
+            "Conte algo relevante que não está no currículo",
+            "Qual experiência não-profissional influenciou sua carreira?",
+            "Que habilidade incomum você traria para nossa equipe?"
           ],
-          "direto": [
-            "Cite sua competência principal e um exemplo prático dela.",
-            "O que no seu currículo é **imprescindível** para nosso sucesso?"
-          ],
-          "competitivo": [
-            "O que faz de você a melhor escolha entre todos os candidatos?",
-            "Como você superou um concorrente em projetos anteriores?"
-          ],
-          "pragmatico": [
-            "Quais experiências do seu passado são **diretamente aplicáveis** a esta vaga?",
-            "Como você resolveria [problema X] que nossa equipe enfrenta atualmente?"
-          ],
-          
-          "persuasivo": [
-            "Convença-nos em 1 minuto de que você é a pessoa certa para esta vaga.",
-            "Qual história da sua carreira mostraria que você se destaca naturalmente?"
-          ],
-          "entusiasta": [
-            "Conte-nos com energia: qual projeto profissional mais te orgulha?",
-            "Como você agregaria entusiasmo ao nosso ambiente de trabalho?"
-          ],
-          "sociavel": [
-            "Como você descreveria sua carreira em uma conversa informal?",
-            "Que experiências mostram sua habilidade de se conectar com colegas?"
-          ],
-          "inspirador": [
-            "Qual lição da sua trajetória motivaria nossa equipe a crescer?",
-            "Como seu exemplo profissional pode impactar positivamente novos talentos?"
-          ],
-          "otimista": [
-            "Como suas conquistas passadas garantem que você terá sucesso aqui?",
-            "Qual oportunidade nesta posição mais te entusiasma?"
-          ],
-          
-          "paciente": [
-            "Pode nos contar, sem pressa, como sua experiência se encaixa nesta vaga?",
-            "Como você construiu sua carreira de forma consistente até aqui?"
-          ],
-          "calmo": [
-            "À sua maneira: como sua trajetória profissional te trouxe até esta oportunidade?",
-            "Quais experiências mostram que você mantém o foco em ambientes desafiadores?"
-          ],
-          "empatico": [
-            "Como suas experiências profissionais moldaram sua visão sobre trabalho em equipe?",
-            "O que você priorizaria para garantir um ambiente harmonioso aqui?"
-          ],
-          "cooperativo": [
-            "Que projetos em equipe foram mais significativos na sua carreira?",
-            "Como você contribuiu para o crescimento coletivo em empregos anteriores?"
-          ],
-          "dedicado": [
-            "Qual compromisso profissional seu demonstra sua persistência?",
-            "Como você lida com obstáculos que exigem esforço prolongado?"
-          ],
-          
-          "analitico": [
-            "Quais dados ou métricas da sua carreira comprovam sua eficácia?",
-            "Como você planejou estrategicamente suas escolhas profissionais?"
-          ],
-          "detalhista": [
-            "Descreva cronologicamente os passos que te trouxeram até esta entrevista.",
-            "Que detalhes do seu trabalho anterior são subestimados, mas cruciais?"
-          ],
-          "metodico": [
-            "Explique sua carreira como um processo estruturado em etapas.",
-            "Como sua organização impactou positivamente projetos complexos?"
-          ],
-          "perfeccionista": [
-            "Qual trabalho seu representa seu padrão ideal de qualidade?",
-            "Como você equilibra excelência e prazos em entregas urgentes?"
-          ],
-          "critico": [
-            "Que feedback recebido anteriormente ajudou a refinar sua atuação?",
-            "Como você avalia suas próprias competências para esta vaga?"
-          ],
-          
-          "observador": [
-            "Que aspectos do seu currículo passariam despercebidos por outros?",
-            "Como sua percepção aguçada evitou erros em projetos anteriores?"
-          ],
-          "encorajador": [
-            "Que experiência sua inspiraria outros a persistirem em desafios?",
-            "Como você apoia colegas durante períodos de alta pressão?"
-          ],
-          "adaptavel": [
-            "Como mudanças inesperadas na sua carreira te prepararam para esta vaga?",
-            "Cite 3 situações profissionais onde você pivotou com sucesso."
-          ],
-          "colaborativa": [
-            "Que projetos em grupo definiram sua abordagem profissional?",
-            "Como você lida com diferenças de opinião em equipe?"
-          ],
-          "diplomatica": [
-            "Como você comunicaria uma decisão difícil aos colaboradores?",
-            "Descreva uma situação onde o equilíbrio foi essencial para um acordo."
-          ],
-          "curioso": [
-            "Que aprendizado incomum da sua carreira outros não perceberiam?",
-            "Como sua busca por conhecimento impactou projetos anteriores?"
-          ],
-          "energetico": [
-            "Descreva sua carreira com 3 adjetivos vibrantes!",
-            "Como seu ritmo de trabalho beneficiaria nossa equipe?"
-          ],
-          "orientado a resultados": [
-            "Quais KPIs da sua trajetória comprovam seu impacto?",
-            "Como suas metas pessoais se alinham aos nossos objetivos?"
-          ]
+          "tags": ["influencia", "extroversao"]
         }
-      },
-      {
-        "id": "motivacao_vaga",
-        "tipo": "apresentacao",
-        "variacoes": {
-          "empatico": [
-            "Quais aspectos técnicos desta vaga chamaram sua atenção?",
-            "Como esta posição se alinha com seus objetivos de carreira?"
+      ]
+    },
+    {
+      "id": "motivacao_vaga",
+      "tipo": "comportamental",
+      "variacoes": [
+        {
+          "textos": [
+            "O que te atraiu especificamente nesta posição?",
+            "Como esta vaga se alinha com seus objetivos de longo prazo?",
+            "Que aspectos da nossa cultura organizacional mais te motivaram?"
           ],
-          "paciente": [
-            "O que mais te atraiu nesta oportunidade?",
-            "Pode compartilhar o que te motivou a se candidatar para esta vaga?"
-          ],
-          "encorajador": [
-            "Por que você quer esta vaga?",
-            "O que te motivou a se candidatar?"
-          ]
+          "tags": ["estabilidade", "sentimento"]
         }
-      }
-    ],
-    "meio": [
-      {
-        "id": "resolucao_problemas",
-        "variacoes": {
-          "analitico": [
-            "Descreva um problema técnico complexo que você resolveu e como abordou a solução.",
-            "Quais ferramentas você utiliza para diagnosticar e resolver problemas em seus projetos?"
+      ]
+    }
+  ],
+  "meio": [
+    {
+      "id": "resolucao_problemas",
+      "tipo": "tecnica",
+      "variacoes": [
+        {
+          "textos": [
+            "Descreva um problema técnico complexo que resolveu detalhadamente",
+            "Como lidaria com um bug crítico em produção sob pressão?",
+            "Quais métricas você usaria para validar uma solução técnica?"
           ],
-          "comunicativo": [
-            "Pode compartilhar uma situação em que a colaboração em equipe foi essencial para resolver um desafio?",
-            "Como você comunica problemas técnicos para membros não técnicos da equipe?"
-          ],
-          "direto": [
-            "Conte-me sobre um problema que você resolveu recentemente.",
-            "Qual foi o maior desafio que enfrentou em seu último projeto?"
-          ]
+          "tags": ["conformidade", "pensamento"]
         }
-      },
-      {
-        "id": "trabalho_em_equipe",
-        "variacoes": {
-          "analitico": [
-            "Como você avalia a eficácia de sua equipe em projetos anteriores?",
-            "Quais estratégias você utiliza para melhorar a colaboração em equipe?"
+      ]
+    },
+    {
+      "id": "trabalho_equipe",
+      "tipo": "situacional",
+      "variacoes": [
+        {
+          "textos": [
+            "Como você lidaria com um colega que não entrega suas partes no projeto?",
+            "Descreva uma experiência positiva de colaboração em equipe",
+            "Qual sua estratégia para integrar novos membros em projetos complexos?"
           ],
-          "comunicativo": [
-            "Pode compartilhar uma experiência positiva trabalhando em equipe?",
-            "Como você contribui para um ambiente de trabalho colaborativo?"
-          ],
-          "direto": [
-            "Você prefere trabalhar sozinho ou em equipe?",
-            "Como você lida com conflitos em equipe?"
-          ]
+          "tags": ["estabilidade", "colaboracao"]
         }
-      }
-    ],
-    "encerramento": [
-      {
-        "id": "disponibilidade",
-        "variacoes": {
-          "analitico": [
-            "Quais são suas expectativas em relação ao cronograma e à carga de trabalho desta posição?",
-            "Como você gerencia seu tempo para cumprir prazos apertados?"
+      ]
+    }
+  ],
+  "encerramento": [
+    {
+      "id": "expectativas",
+      "tipo": "logistica",
+      "variacoes": [
+        {
+          "textos": [
+            "Como você planeja seus primeiros 30 dias nesta posição?",
+            "Que recursos precisaria para ter sucesso neste cargo?",
+            "Como enxerga seu crescimento nesta empresa nos próximos 2 anos?"
           ],
-          "comunicativo": [
-            "Você está disponível para iniciar imediatamente, ou precisa cumprir algum aviso prévio?",
-            "Como você se adapta a mudanças de cronograma ou prioridades?"
-          ],
-          "direto": [
-            "Quando você pode começar?",
-            "Tem alguma restrição de horário?"
-          ]
+          "tags": ["dominancia", "planejamento"]
         }
-      },
-      {
-        "id": "expectativas_salariais",
-        "variacoes": {
-          "analitico": [
-            "Com base no mercado e na sua experiência, qual seria sua expectativa salarial?",
-            "Como você determina o valor adequado para sua remuneração?"
-          ],
-          "comunicativo": [
-            "Qual faixa salarial você considera justa para esta posição?",
-            "Pode compartilhar suas expectativas em relação à remuneração?"
-          ],
-          "direto": [
-            "Qual é sua pretensão salarial?",
-            "Quanto você espera ganhar?"
-          ]
-        }
-      }
-    ]
-  }
-  
+      ]
+    }
+  ]
+}

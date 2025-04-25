@@ -1,15 +1,32 @@
 // src/data/traits.js
-export const possibleTraits = [
-    // DISC – Dominance (D)
-    'Assertivo', 'Decisivo', 'Direto', 'Competitivo', 'Pragmático',
-    // DISC – Influence (I)
-    'Persuasivo', 'Entusiasta', 'Sociável', 'Inspirador', 'Otimista',
-    // DISC – Steadiness (S)
-    'Paciente', 'Calmo', 'Empático', 'Cooperativo', 'Dedicado',
-    // DISC – Conscientiousness (C)
-    'Analítico', 'Detalhista', 'Metódico', 'Perfeccionista', 'Crítico',
-    // Comportamentais adicionais (para enriquecer variações)
-    'Observador', 'Encorajador', 'Adaptável', 'Colaborativa', 'Diplomática',
-    'Curioso', 'Energético', 'Orientado a Resultados'
-  ];
-  
+export const traitMappings = {
+  'empatico': ['estabilidade', 'sentimento'],
+  'paciente': ['estabilidade'],
+  'observador': ['conformidade', 'sensacao'],
+  'encorajador': ['influencia', 'sentimento'],
+  'analitico': ['conformidade', 'pensamento'],
+  'visionario': ['intuicao', 'dominancia'],
+  'decisivo': ['dominancia', 'julgamento'],
+  'exigente': ['conformidade', 'julgamento'],
+  'energetico': ['influencia', 'extroversao'],
+  'persuasivo': ['influencia'],
+  'adaptavel': ['percepcao'],
+  'curioso': ['intuicao', 'percepcao'],
+  'metodico': ['conformidade', 'julgamento'],
+  'preciso': ['conformidade'],
+  'detalhista': ['conformidade', 'sensacao'],
+  'diplomatica': ['sentimento', 'julgamento'],
+  'colaborativa': ['estabilidade', 'sentimento'],
+  'pratico': ['sensacao', 'julgamento'],
+  'direto': ['dominancia'],
+  'orientado a resultados': ['dominancia', 'julgamento'],
+  'IA': ['IA'],
+  'colaboracao': ['cooperativo', 'empatia'],
+  'planejamento': ['metodico', 'estrategico']
+};
+
+export function convertTraits(oldTraits) {
+  return [...new Set(oldTraits.flatMap(t => 
+    traitMappings[t] ? [...traitMappings[t], t] : [t]
+  ))];
+}
