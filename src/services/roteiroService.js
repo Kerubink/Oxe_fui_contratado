@@ -39,7 +39,11 @@ ${vaga}
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      body: JSON.stringify({ 
+        contents: [{ 
+          parts: [{ text: prompt }] 
+        }] 
+      })
     }
   );
   
@@ -76,7 +80,7 @@ export async function gerarRoteiroEntrevista(perguntasJson) {
       roteiro[secao].push({
         id: perguntaObj.id,
         tipo: perguntaObj.tipo || secaoParaTipo[secao],
-        tags: resultado.tags,
+        tags: [...resultado.tags, ...traitsAntigos],
         pergunta: resultado.pergunta,
         tempoRespostaSugerido: calcularTempoParaResposta(
           resultado.pergunta,
@@ -99,7 +103,7 @@ export async function gerarRoteiroEntrevista(perguntasJson) {
   roteiro.tecnicas = tecnicas.map((pergunta, idx) => ({
     id: `tecnica_${idx + 1}`,
     tipo: 'tecnica',
-    tags: ['IA', ...traitsNovos],
+    tags: ['IA', ...traitsAntigos],
     pergunta,
     tempoRespostaSugerido: calcularTempoParaResposta(
       pergunta,

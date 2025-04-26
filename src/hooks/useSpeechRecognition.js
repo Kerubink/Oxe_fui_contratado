@@ -43,11 +43,17 @@ export function useSpeechRecognition({ awaitingResponse, ttsPlaying }) {
     }
   }, [micOn, awaitingResponse, ttsPlaying]);
 
+  const stopRecognition = () => {
+    recognitionRef.current?.stop();
+    setMicOn(false);
+  };
+
   return {
     transcript,
     setTranscript,
     micOn,
     setMicOn,
     recognitionRef,
+    stopRecognition
   };
 }

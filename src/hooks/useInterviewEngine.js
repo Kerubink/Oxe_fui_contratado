@@ -5,11 +5,13 @@ import { useTTS } from "./useTTS";
 import { useSpeechRecognition } from "./useSpeechRecognition";
 import { useCamera } from "./useCamera";
 import { useFaceMonitor } from "./useFaceMonitor";
+import { useTimeMonitor } from "./useTimeMonitor";
 
 export function useInterviewEngine() {
   const [roteiro, setRoteiro] = useState(null);
   const [idx, setIdx] = useState(0);
   const [chat, setChat] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
   const [chatVisible, setChatVisible] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -18,19 +20,15 @@ export function useInterviewEngine() {
 
   const videoRef = useRef(null);
 
-  const {
-    playTTS,
-    ttsPlaying,
-    audioRef,
-  } = useTTS();
+  const { playTTS, ttsPlaying, audioRef } = useTTS();
 
   const {
     transcript,
     setTranscript,
     micOn,
     setMicOn,
-    recognitionRef
-    
+    recognitionRef,
+    stopRecognition
   } = useSpeechRecognition({ awaitingResponse, ttsPlaying });
 
   useCamera(videoRef, camOn, interviewStarted);
@@ -43,81 +41,77 @@ export function useInterviewEngine() {
     transcript,
     awaitingResponse
   );
-  
-  
-  // 🔁 Avança as perguntas do roteiro
+
   useEffect(() => {
     if (!roteiro || idx >= roteiro.length) return;
 
     (async () => {
-      const pergunta = roteiro[idx].pergunta;
-      setChat((c) => [...c, { sender: "Entrevistador", text: pergunta }]);
+      const question = roteiro[idx];
+      setCurrentQuestion(question);
+      setChat((c) => [...c, { sender: "Entrevistador", text: question.pergunta }]);
       setAwaitingResponse(false);
       setMicOn(false);
       setTranscript("");
-      await playTTS(pergunta);
-      setAwaitingResponse(true);
+      
+      await playTTS(question.pergunta);
+      
+      setTimeout(async () => {
+        await playTTS("Por favor, responda agora.");
+        setAwaitingResponse(true);
+      }, 1500);
     })();
   }, [roteiro, idx]);
 
-  // 🎤 Toggle e envio de resposta
-  const toggleMic = () => {
-    micOn ? sendResponse() : setMicOn(true);
-  };
-
-  const sendResponse = async () => {
-    if (isSending || !transcript.trim()) return;
+  const sendResponse = async (isAuto = false) => {
+    if ((isSending && !isAuto) || (!isAuto && !transcript.trim())) return;
+    
     setIsSending(true);
     setMicOn(false);
+    stopRecognition();
 
-    const resposta = transcript.trim();
-    setChat((c) => [...c, { sender: "Você", text: resposta }]);
-
-    const stored = await localforage.getItem("roteiroEntrevista");
-    if (stored) {
-      const lenI = stored.inicio.length;
-      const lenM = stored.meio.length;
-      const lenT = stored.tecnicas.length;
-      let fase, pos;
-      if (idx < lenI) {
-        fase = "inicio"; pos = idx;
-      } else if (idx < lenI + lenM) {
-        fase = "meio"; pos = idx - lenI;
-      } else if (idx < lenI + lenM + lenT) {
-        fase = "tecnicas"; pos = idx - lenI - lenM;
-      } else {
-        fase = "encerramento"; pos = idx - lenI - lenM - lenT;
+    if (transcript.trim()) {
+      setChat((c) => [...c, { sender: "Você", text: transcript.trim() }]);
+      
+      const stored = await localforage.getItem("roteiroEntrevista");
+      if (stored) {
+        const sections = ['inicio', 'meio', 'tecnicas', 'encerramento'];
+        const currentSection = sections.find(section => 
+          idx < stored[section].length
+        ) || 'encerramento';
+        stored[currentSection][idx % stored[currentSection].length].resposta = transcript.trim();
+        await localforage.setItem("roteiroEntrevista", stored);
       }
-      stored[fase][pos].resposta = resposta;
-      await localforage.setItem("roteiroEntrevista", stored);
     }
 
-    setIdx((i) => i + 1);
     setIsSending(false);
   };
 
-  // ▶️ Iniciar entrevista
+  const forceNextQuestion = () => {
+    setIdx(i => i + 1);
+  };
+
   const startInterview = async () => {
     try {
-      await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setInterviewStarted(true);
 
       const stored = await localforage.getItem("roteiroEntrevista");
       if (stored) {
-        setRoteiro([
-          ...stored.inicio,
-          ...stored.meio,
-          ...stored.tecnicas,
-          ...stored.encerramento,
-        ]);
+        setRoteiro([...stored.inicio, ...stored.meio, ...stored.tecnicas, ...stored.encerramento]);
       }
     } catch {
       alert("Permita câmera e microfone para continuar.");
     }
   };
+
+  useTimeMonitor({
+    currentQuestion,
+    awaitingResponse,
+    playTTS,
+    sendSystemMessage: (text) => setChat(c => [...c, { sender: "Sistema", text }]),
+    forceNextQuestion,
+    sendResponse
+  });
 
   return {
     videoRef,
@@ -125,7 +119,7 @@ export function useInterviewEngine() {
     transcript,
     setTranscript,
     micOn,
-    toggleMic,
+    toggleMic: () => micOn ? sendResponse() : setMicOn(true),
     camOn,
     setCamOn,
     chat,
