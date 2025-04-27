@@ -2,145 +2,83 @@
 import { useEffect, useRef, useState } from "react";
 import * as faceapi from "face-api.js";
 
-// Frases de ausência (sem rosto)
-const ABSENCE_MSGS = [
-  "Não consigo te ver.",
-  "Olá, tem certeza de que você está aí?",
-  "Poxa! Acho que não está enquadrado na câmera."
-];
+const ABSENCE_MSG = "Não consigo te ver! Por favor, posicione-se na frente da câmera.";
 
-// Frases de silêncio com mic desligado
-const NO_MIC_MSGS = [
-  "Acho que você esqueceu de abrir o microfone.",
-  "Se não puder falar, fique à vontade para digitar no chat sua resposta.",
-  "Está tudo bem? Estou no aguardo da sua resposta."
-];
-
-// Frases de silêncio com mic ligado
-const SILENT_MIC_MSGS = [
-  "Não consigo te ouvir...",
-  "Certeza que seu microfone está funcionando?",
-  "Você está falando algo? Não consigo ouvir nada..."
-];
-
-export function useFaceMonitor(
+export function useFaceMonitor({
   videoRef,
   camOn,
   interviewStarted,
-  playTTS,
+  say,
   micOn,
   transcript,
   awaitingResponse
-) {
-  const [userVisible, setUserVisible] = useState(true);
-  const absenceIdxRef = useRef(0);
-  const absenceTimerRef = useRef(null);
-  const silenceTimerRef = useRef(null);
-  const lastTranscriptRef = useRef("");
+}) {
+  const absenceTimer = useRef(null);
+  const modelsLoaded = useRef(false);
+  const checkingRef = useRef(false);
 
   useEffect(() => {
     if (!interviewStarted || !camOn || !videoRef.current) return;
+    let mounted = true;
 
-    faceapi.nets.tinyFaceDetector.loadFromUri("/models").catch(console.error);
-    let canceled = false;
+    const loadModels = async () => {
+      if (!modelsLoaded.current) {
+        await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+        modelsLoaded.current = true;
+      }
+    };
 
-    const detectLoop = async () => {
-      if (canceled) return;
+    const startDetection = async () => {
+      await loadModels();
 
-      try {
-        const detection = await faceapi.detectSingleFace(
-          videoRef.current,
-          new faceapi.TinyFaceDetectorOptions()
-        );
+      const checkFace = async () => {
+        if (!mounted || !modelsLoaded.current || !videoRef.current) return;
 
-        if (detection) {
-          // 👤 Rosto detectado
-          setUserVisible(true);
+        try {
+          checkingRef.current = true;
+          const detection = await faceapi.detectSingleFace(
+            videoRef.current,
+            new faceapi.TinyFaceDetectorOptions()
+          );
+          checkingRef.current = false;
 
-          // 🧹 Limpa timeout de ausência
-          if (absenceTimerRef.current) {
-            clearTimeout(absenceTimerRef.current);
-            absenceTimerRef.current = null;
-          }
-
-          // 🤐 Monitoramento de silêncio
-          if (awaitingResponse) {
-            const trimmed = transcript.trim();
-
-            if (trimmed === lastTranscriptRef.current) {
-              // Está parado
-              if (!silenceTimerRef.current) {
-                console.log("[SILÊNCIO] Iniciando timer...", { micOn, transcript });
-                silenceTimerRef.current = setTimeout(async () => {
-                  if (!videoRef.current || canceled) return;
-
-                  const msgs = micOn ? SILENT_MIC_MSGS : NO_MIC_MSGS;
-                  const random = Math.floor(Math.random() * msgs.length);
-                  console.log("[SILÊNCIO] Falando:", msgs[random]);
-                  await playTTS(msgs[random]);
-
-                  silenceTimerRef.current = null;
-                }, 5000);
-              }
-            } else {
-              // O usuário falou ou digitou
-              lastTranscriptRef.current = trimmed;
-              if (silenceTimerRef.current) {
-                clearTimeout(silenceTimerRef.current);
-                silenceTimerRef.current = null;
-                console.log("[SILÊNCIO] Cancelado — houve transcrição.");
-              }
+          if (!detection) {
+            if (!absenceTimer.current) {
+              absenceTimer.current = setTimeout(async () => {
+                if (mounted) {
+                  await say(ABSENCE_MSG);
+                }
+                absenceTimer.current = null;
+              }, 3000); // 3 segundos sem rosto
             }
           } else {
-            // não está aguardando resposta → limpa
-            if (silenceTimerRef.current) {
-              clearTimeout(silenceTimerRef.current);
-              silenceTimerRef.current = null;
+            if (absenceTimer.current) {
+              clearTimeout(absenceTimer.current);
+              absenceTimer.current = null;
             }
           }
-
-        } else {
-          // 🚶‍♂️ Rosto ausente
-          setUserVisible(false);
-
-          if (!absenceTimerRef.current) {
-            absenceTimerRef.current = setTimeout(async () => {
-              if (!videoRef.current || canceled) return;
-
-              const next = (absenceIdxRef.current + 1) % ABSENCE_MSGS.length;
-              absenceIdxRef.current = next;
-              await playTTS(ABSENCE_MSGS[next]);
-
-              absenceTimerRef.current = null;
-            }, 3000);
-          }
-
-          // cancela silêncio se sumiu
-          if (silenceTimerRef.current) {
-            clearTimeout(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-          }
+        } catch (e) {
+          console.error("Erro na detecção de rosto:", e);
+          checkingRef.current = false;
         }
+      };
 
-      } catch (err) {
-        console.error("Face detect error:", err);
-      }
+      const interval = setInterval(() => {
+        if (!checkingRef.current) {
+          checkFace();
+        }
+      }, 1000); // a cada 1 segundo
 
-      requestAnimationFrame(detectLoop);
+      return () => clearInterval(interval);
     };
 
-    const handlePlaying = () => detectLoop();
-    if (videoRef.current.readyState >= 3) handlePlaying();
-    videoRef.current.addEventListener("playing", handlePlaying);
+    const stopDetection = startDetection();
 
     return () => {
-      canceled = true;
-      videoRef.current.removeEventListener("playing", handlePlaying);
-      setUserVisible(true);
-      if (absenceTimerRef.current) clearTimeout(absenceTimerRef.current);
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      mounted = false;
+      stopDetection.then(clear => clear && clear());
+      clearTimeout(absenceTimer.current);
     };
-  }, [interviewStarted, camOn, transcript, micOn, awaitingResponse]);
+  }, [interviewStarted, camOn, say]);
 
-  return { userVisible };
 }
