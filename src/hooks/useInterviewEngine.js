@@ -60,7 +60,10 @@ export function useInterviewEngine() {
       const ficha = await localforage.getItem("fichaEntrevista");
       const interviewer = ficha?.interviewer?.name || "Entrevistador";
       const stored = (await localforage.getItem("roteiroEntrevista")) || {
-        inicio: [], meio: [], tecnicas: [], encerramento: []
+        inicio: [],
+        meio: [],
+        tecnicas: [],
+        encerramento: []
       };
 
       setRoteiro([
@@ -109,11 +112,9 @@ export function useInterviewEngine() {
 
   // effect dedicado para redirecionar APÓS o encerramento e 2s de silêncio
   useEffect(() => {
-    // só dispara no índice final
     if (!interviewStarted) return;
     if (idx !== roteiro.length - 1) return;
 
-    // quando o TTS parar de tocar, aguarda mais 2s e navega
     if (!ttsPlaying) {
       const timer = setTimeout(() => {
         navigate("/feedback");
@@ -142,23 +143,22 @@ export function useInterviewEngine() {
 
     setChat(c => [...c, { sender: "Você", text: answer }]);
 
-    // opcional: salvar apenas para perguntas reais
-    if (idx > 1 && idx < roteiro.length - 1) {
+    // --- SALVA POR ID (em vez de offset) ---
+    const current = roteiro[idx];
+    if (current && current.id) {
       const stored = await localforage.getItem("roteiroEntrevista");
       if (stored) {
-        const secs = ["inicio","meio","tecnicas","encerramento"];
-        let offset = idx - 1;
-        let secName = "encerramento";
-        for (let sec of secs) {
-          const len = stored[sec]?.length || 0;
-          if (offset < len) {
-            secName = sec;
-            break;
-          }
-          offset -= len;
-        }
-        if (stored[secName]) {
-          stored[secName][offset].resposta = answer;
+        const sectionMap = {
+          comportamental: "inicio",
+          situacional:   "meio",
+          tecnica:       "tecnicas",
+          expectativa:   "encerramento"
+        };
+        const secKey = sectionMap[current.tipo];
+        const sectionArr = stored[secKey] || [];
+        const item = sectionArr.find(q => q.id === current.id);
+        if (item) {
+          item.resposta = answer;
           await localforage.setItem("roteiroEntrevista", stored);
         }
       }
