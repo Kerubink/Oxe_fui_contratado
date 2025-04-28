@@ -1,181 +1,192 @@
 // src/hooks/useInterviewEngine.js
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import localforage from "localforage";
 import { useTTS } from "./useTTS";
 import { useSpeechRecognition } from "./useSpeechRecognition";
 import { useCamera } from "./useCamera";
-import { useFaceMonitor } from "./useFaceMonitor";
-import { useTimeMonitor } from "./useTimeMonitor";
 
 export function useInterviewEngine() {
-  const [roteiro, setRoteiro] = useState(null);
-  const [idx, setIdx] = useState(-1); // Começa em -1 para mostrar a mensagem de boas-vindas
+  // estados principais
+  const [roteiro, setRoteiro] = useState([]);
+  const [idx, setIdx] = useState(0);
   const [chat, setChat] = useState([]);
-  const [currentQuestion, setCurrentQuestion] = useState(null);
-
+  const [transcript, setTranscript] = useState("");
   const [chatVisible, setChatVisible] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [interviewStarted, setInterviewStarted] = useState(false);
   const [awaitingResponse, setAwaitingResponse] = useState(false);
-  const [isSending, setIsSending] = useState(false);
 
+  const navigate = useNavigate();
+  const videoRef = useRef(null);
+
+  // TTS
   const { playTTS, ttsPlaying, audioRef } = useTTS();
-  const say = async (text) => {
-    setChat(c => [...c, { sender: "Entrevistador", text }]);
-    await playTTS(text);
-  };
 
+  // STT
   const {
-    transcript: srTranscript,
-    setTranscript: setSRTranscript,
+    transcript: recognitionTranscript,
+    setTranscript: setRecognitionTranscript,
     micOn,
-    setMicOn,
-    recognitionRef,
-    stopRecognition
+    startRecognition,
+    stopRecognition,
   } = useSpeechRecognition({ awaitingResponse, ttsPlaying });
 
-  const transcriptRef = useRef("");
-  const [transcriptState, _setTranscriptState] = useState("");
-  const setTranscript = (text) => {
-    transcriptRef.current = text;
-    _setTranscriptState(text);
-  };
+  // sincronia STT → textarea
   useEffect(() => {
-    setTranscript(srTranscript);
-  }, [srTranscript]);
+    if (micOn) setTranscript(recognitionTranscript);
+  }, [recognitionTranscript, micOn]);
 
-  const videoRef = useRef(null);
+  // câmera (opcional)
   useCamera(videoRef, camOn, interviewStarted);
 
+  // toggle mic: abrir ou fechar → enviar
+  const toggleMic = () => {
+    if (micOn) {
+      stopRecognition();
+      sendResponse();
+    } else {
+      setTranscript("");
+      setRecognitionTranscript("");
+      startRecognition();
+    }
+  };
+
+  // carrega nomes e roteiro completo (intro + seções + encerramento)
+  useEffect(() => {
+    (async () => {
+      const user = localStorage.getItem("usuarioNome") || "candidato";
+      const ficha = await localforage.getItem("fichaEntrevista");
+      const interviewer = ficha?.interviewer?.name || "Entrevistador";
+      const stored = (await localforage.getItem("roteiroEntrevista")) || {
+        inicio: [], meio: [], tecnicas: [], encerramento: []
+      };
+
+      setRoteiro([
+        { pergunta: `Olá, ${user}! Seja bem-vindo. Eu sou ${interviewer} e vou te entrevistar hoje.` },
+        ...stored.inicio,
+        ...stored.meio,
+        ...stored.tecnicas,
+        ...stored.encerramento,
+        { pergunta: "Muito obrigado por sua participação! Foi um prazer conversar com você. Até breve." }
+      ]);
+    })();
+  }, []);
+
+  // dispara cada pergunta (sem ainda redirecionar)
+  useEffect(() => {
+    if (!interviewStarted || roteiro.length === 0) return;
+    if (idx > roteiro.length - 1) return;
+
+    const pergunta = roteiro[idx].pergunta;
+    setChat(c => [...c, { sender: "Entrevistador", text: pergunta }]);
+    setAwaitingResponse(false);
+    setTranscript("");
+    setRecognitionTranscript("");
+
+    (async () => {
+      await playTTS(pergunta);
+
+      // introdução
+      if (idx === 0) {
+        setIdx(1);
+        return;
+      }
+
+      // encerramento: toca TTS e não faz mais nada aqui
+      if (idx === roteiro.length - 1) {
+        return;
+      }
+
+      // perguntas reais: prompt e await
+      await new Promise(r => setTimeout(r, 1500));
+      setChat(c => [...c, { sender: "Entrevistador", text: "Por favor, responda agora." }]);
+      await playTTS("Por favor, responda agora.");
+      setAwaitingResponse(true);
+    })();
+  }, [interviewStarted, idx, roteiro]);
+
+  // effect dedicado para redirecionar APÓS o encerramento e 2s de silêncio
+  useEffect(() => {
+    // só dispara no índice final
+    if (!interviewStarted) return;
+    if (idx !== roteiro.length - 1) return;
+
+    // quando o TTS parar de tocar, aguarda mais 2s e navega
+    if (!ttsPlaying) {
+      const timer = setTimeout(() => {
+        navigate("/feedback");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [idx, roteiro, ttsPlaying, navigate, interviewStarted]);
+
+  // inicia entrevista
   const startInterview = async () => {
     try {
       await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setInterviewStarted(true);
-      const stored = await localforage.getItem("roteiroEntrevista");
-      if (stored) {
-        setRoteiro([
-          ...stored.inicio,
-          ...stored.meio,
-          ...stored.tecnicas,
-          ...stored.encerramento
-        ]);
-      }
     } catch {
-      alert("Permita o uso da câmera e microfone para continuar!");
+      alert("Permita câmera e microfone para continuar.");
     }
   };
 
-  const sendResponse = async (isAuto = false) => {
-    const text = transcriptRef.current.trim();
-    if ((isSending && !isAuto) || (!isAuto && !text)) return;
-
+  // envia resposta e avança índice
+  const sendResponse = async () => {
+    const answer = transcript.trim();
+    if (!answer) return;
     setIsSending(true);
-    setMicOn(false);
-    stopRecognition();
 
-    if (text) {
-      setChat(c => [...c, { sender: "Você", text }]);
+    if (micOn) stopRecognition();
+
+    setChat(c => [...c, { sender: "Você", text: answer }]);
+
+    // opcional: salvar apenas para perguntas reais
+    if (idx > 1 && idx < roteiro.length - 1) {
       const stored = await localforage.getItem("roteiroEntrevista");
       if (stored) {
-        const sections = ['inicio', 'meio', 'tecnicas', 'encerramento'];
-        const section = sections.find(sec => idx < stored[sec]?.length) || 'encerramento';
-        if (stored[section]) {
-          stored[section][idx % stored[section].length].resposta = text;
+        const secs = ["inicio","meio","tecnicas","encerramento"];
+        let offset = idx - 1;
+        let secName = "encerramento";
+        for (let sec of secs) {
+          const len = stored[sec]?.length || 0;
+          if (offset < len) {
+            secName = sec;
+            break;
+          }
+          offset -= len;
+        }
+        if (stored[secName]) {
+          stored[secName][offset].resposta = answer;
           await localforage.setItem("roteiroEntrevista", stored);
         }
       }
     }
 
     setTranscript("");
+    setRecognitionTranscript("");
+    setAwaitingResponse(false);
     setIsSending(false);
     setIdx(i => i + 1);
   };
 
-  useFaceMonitor({
-    videoRef,
-    camOn,
-    interviewStarted,
-    say,
-    micOn,
-    transcript: transcriptState,
-    awaitingResponse
-  });
-
-  useTimeMonitor({
-    currentQuestion,
-    awaitingResponse,
-    playTTS: say,
-    sendSystemMessage: (msg) =>
-      setChat(c => [...c, { sender: "Entrevistador", text: msg }]),
-    forceNextQuestion: () => setIdx(i => i + 1),
-    sendResponse
-  });
-
-  useEffect(() => {
-    if (roteiro === null) return;
-  
-    (async () => {
-      if (idx === -1) {
-        await say("Olá! Seja bem-vindo à nossa entrevista. Vamos começar!");
-        setIdx(0);
-        return;
-      }
-  
-      if (idx >= roteiro.length) {
-        await say("Entrevista finalizada! Muito obrigado pela sua participação.");
-        setInterviewStarted(false);
-        return;
-      }
-  
-      const connectionPhrases = [
-        "Hmmm, deixa eu pensar...",
-        "Ok, eu quero saber de você...",
-        "Me fale então...",
-        "Gostaria de saber...",
-        "Vamos lá...",
-        "Agora me conte..."
-      ];
-  
-      const connection = connectionPhrases[Math.floor(Math.random() * connectionPhrases.length)];
-  
-      const question = roteiro[idx];
-      setCurrentQuestion(question);
-  
-      setAwaitingResponse(false);
-      setMicOn(false);
-      setTranscript("");
-      setSRTranscript("");
-  
-      // Enviar a frase de conexão separadamente (apenas uma vez)
-      await say(connection);
-      setChat(c => [...c, { sender: "Entrevistador", text: connection }]);
-  
-      // Enviar a pergunta separadamente (apenas uma vez)
-      await say(question.pergunta);
-      setChat(c => [...c, { sender: "Entrevistador", text: question.pergunta }]);
-  
-      setAwaitingResponse(true);
-      recognitionRef.current?.start();
-    })();
-  }, [roteiro, idx]);
-
   return {
     videoRef,
     audioRef,
-    transcript: transcriptState,
-    setTranscript,
-    srTranscript,
     micOn,
-    toggleMic: () => micOn ? sendResponse() : setMicOn(true),
+    toggleMic,
     camOn,
     setCamOn,
     chat,
     chatVisible,
     setChatVisible,
+    transcript,
+    setTranscript,
     sendResponse,
     isSending,
     startInterview,
     interviewStarted,
-    userVisible: true // sempre true aqui, FaceMonitor já dá alertas
+    userVisible: true,
   };
 }

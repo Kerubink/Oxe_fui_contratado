@@ -5,10 +5,12 @@ export function useSpeechRecognition({ awaitingResponse, ttsPlaying }) {
   const [transcript, setTranscript] = useState("");
   const [micOn, setMicOn] = useState(false);
   const recognitionRef = useRef(null);
-  const finalTranscriptRef = useRef(""); // acumulador seguro
+  const finalTranscriptRef = useRef(""); // acumulador interno
 
+  // Inicializa o recognition uma única vez
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       console.warn("SpeechRecognition API não disponível.");
       return;
@@ -20,64 +22,73 @@ export function useSpeechRecognition({ awaitingResponse, ttsPlaying }) {
     recognition.continuous = true;
 
     recognition.onresult = (event) => {
-      let interimTranscript = "";
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
           finalTranscriptRef.current += result[0].transcript + " ";
         } else {
-          interimTranscript += result[0].transcript;
+          interim += result[0].transcript;
         }
       }
-      // Mostrar no textarea o final + o atual que ainda está sendo falado
-      setTranscript(finalTranscriptRef.current + interimTranscript);
+      setTranscript(finalTranscriptRef.current + interim);
+    };
+
+    recognition.onend = () => {
+      // Garantir que, se pararmos o mic, a instância seja reiniciável
+      if (micOn && awaitingResponse && !ttsPlaying) {
+        recognition.start();
+      }
     };
 
     recognitionRef.current = recognition;
-  }, []);
+  }, [awaitingResponse, ttsPlaying]);
 
+  // Liga/desliga o recognition conforme micOn, awaitingResponse e ttsPlaying
   useEffect(() => {
-    if (!recognitionRef.current) return;
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
 
     if (micOn && awaitingResponse && !ttsPlaying) {
       try {
-        recognitionRef.current.start();
-      } catch (error) {
-        if (error.name !== "InvalidStateError") {
-          console.error("Erro ao iniciar reconhecimento:", error);
-        }
+        recognition.start();
+      } catch (e) {
+        // InvalidStateError if já iniciado
       }
     } else {
       try {
-        recognitionRef.current.stop();
-      } catch (error) {
-        console.error("Erro ao parar reconhecimento:", error);
+        recognition.stop();
+      } catch (e) {
+        // ignore
       }
     }
   }, [micOn, awaitingResponse, ttsPlaying]);
 
+  // Abre o microfone: limpa buffers e estado antes de começar
   const startRecognition = () => {
-    setTranscript("");
     finalTranscriptRef.current = "";
+    setTranscript("");
     setMicOn(true);
   };
 
+  // Fecha o microfone: para recognition e limpa buffers
   const stopRecognition = () => {
     setMicOn(false);
     try {
       recognitionRef.current?.stop();
-    } catch (error) {
-      console.error("Erro ao parar reconhecimento:", error);
+    } catch {
+      // ignore
     }
+    finalTranscriptRef.current = "";
+    setTranscript("");
   };
 
   return {
     transcript,
     setTranscript,
     micOn,
-    setMicOn,
     startRecognition,
     stopRecognition,
-    recognitionRef
+    recognitionRef,
   };
 }

@@ -1,24 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import localforage from 'localforage';
 import { gerarRoteiroEntrevista } from '../services/roteiroService';
-import perguntasJson from '../../public/perguntas.json';
 
 export default function EntrevistaLoading() {
   const navigate = useNavigate();
+  const hasRun = useRef(false);
 
   useEffect(() => {
+    if (hasRun.current) return;       // se já rodou, sai
+    hasRun.current = true;            // marca como executado
+
     (async () => {
       try {
-        const perguntas = await fetch('/perguntas.json').then(r => r.json());
-        await gerarRoteiroEntrevista(perguntas);
+        await gerarRoteiroEntrevista();  // única chamada garantida
         navigate('/video-check');
       } catch (err) {
         console.error('Erro ao gerar roteiro:', err);
         alert('Ocorreu um erro ao criar sua entrevista.');
       }
     })();
-  }, []);
+  }, [navigate]); // só dispara uma vez
 
   return (
     <div className="min-h-screen flex items-center justify-center">

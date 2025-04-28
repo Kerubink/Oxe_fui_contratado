@@ -6,6 +6,7 @@ import InterviewScreen from './pages/InterviewScreen';
 import EntrevistaLoading from './pages/EntrevistaLoading.jsx';
 import VideoCheck from './pages/VideoCheck.jsx';
 import SalaDeEntrada from './pages/SalaDeEntrada.jsx';
+import AvaliacaoCandidato from './pages/AvaliacaoCandidato.jsx';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
   {
     path: '/entrevista',
     element: <InterviewScreen />
+  },
+  {
+    path: '/feedback',
+    element: <AvaliacaoCandidato />
   }
 ]);
 

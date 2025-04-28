@@ -32,7 +32,7 @@ export default function InterviewScreen() {
     <div className="h-screen flex flex-col bg-neutral-900">
       <audio ref={audioRef} hidden />
       <InterviewHeader />
-      <div className="flex flex-1 gap-2 p-2">
+      <div className="flex h-full gap-2 p-2">
         <VideoSection videoRef={videoRef} userVisible={userVisible} />
         <ChatPanel
           chatVisible={chatVisible}
