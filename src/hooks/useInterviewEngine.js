@@ -143,7 +143,7 @@ export function useInterviewEngine() {
     setChat(c => [...c, { sender: "Você", text: answer }]);
 
     // opcional: salvar apenas para perguntas reais
-    if (idx > 1 && idx < roteiro.length - 1) {
+    if (idx > 0 && idx < roteiro.length - 1) {
       const stored = await localforage.getItem("roteiroEntrevista");
       if (stored) {
         const secs = ["inicio","meio","tecnicas","encerramento"];
