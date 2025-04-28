@@ -1,0 +1,86 @@
+{
+  "inicio": [
+    {
+      "id": "apresentacao_pessoal",
+      "tipo": "comportamental",
+      "variacoes": [
+        {
+          "textos": [
+            "Resuma sua trajetória em 3 pontos-chave que justifiquem sua contratação",
+            "Quais marcos profissionais comprovam sua aptidão para esta vaga?",
+            "Descreva sua jornada profissional como um roadmap de entregas relevantes"
+          ],
+          "tags": ["dominancia", "julgamento"]
+        },
+        {
+          "textos": [
+            "Conte algo relevante que não está no currículo",
+            "Qual experiência não-profissional influenciou sua carreira?",
+            "Que habilidade incomum você traria para nossa equipe?"
+          ],
+          "tags": ["influencia", "extroversao"]
+        }
+      ]
+    },
+    {
+      "id": "motivacao_vaga",
+      "tipo": "comportamental",
+      "variacoes": [
+        {
+          "textos": [
+            "O que te atraiu especificamente nesta posição?",
+            "Como esta vaga se alinha com seus objetivos de longo prazo?",
+            "Que aspectos da nossa cultura organizacional mais te motivaram?"
+          ],
+          "tags": ["estabilidade", "sentimento"]
+        }
+      ]
+    }
+  ],
+  "meio": [
+    {
+      "id": "resolucao_problemas",
+      "tipo": "tecnica",
+      "variacoes": [
+        {
+          "textos": [
+            "Descreva um problema técnico complexo que resolveu detalhadamente",
+            "Como lidaria com um bug crítico em produção sob pressão?",
+            "Quais métricas você usaria para validar uma solução técnica?"
+          ],
+          "tags": ["conformidade", "pensamento"]
+        }
+      ]
+    },
+    {
+      "id": "trabalho_equipe",
+      "tipo": "situacional",
+      "variacoes": [
+        {
+          "textos": [
+            "Como você lidaria com um colega que não entrega suas partes no projeto?",
+            "Descreva uma experiência positiva de colaboração em equipe",
+            "Qual sua estratégia para integrar novos membros em projetos complexos?"
+          ],
+          "tags": ["estabilidade", "colaboracao"]
+        }
+      ]
+    }
+  ],
+  "encerramento": [
+    {
+      "id": "expectativas",
+      "tipo": "logistica",
+      "variacoes": [
+        {
+          "textos": [
+            "Como você planeja seus primeiros 30 dias nesta posição?",
+            "Que recursos precisaria para ter sucesso neste cargo?",
+            "Como enxerga seu crescimento nesta empresa nos próximos 2 anos?"
+          ],
+          "tags": ["dominancia", "planejamento", "conformidade", "pensamento"]
+        }
+      ]
+    }
+  ]
+}

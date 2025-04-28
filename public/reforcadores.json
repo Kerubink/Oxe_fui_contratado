@@ -1,0 +1,122 @@
+{
+    "reforçador": [
+      {
+        "id": "encorajamento",
+        "tipo": "encorajamento",
+        "variacoes": {
+          "assertivo": [
+            "Continue. Precisamos ouvir sua resposta para avaliarmos melhor.",
+            "Não deixe de compartilhar sua visão sobre a pergunta."
+          ],
+          "decisivo": [
+            "Esta é a hora de detalhar sua resposta. Vamos prosseguir.",
+            "Sua contribuição é importante. Continue com o que estava dizendo."
+          ],
+          "direto": [
+            "Foque na pergunta feita. Estamos aguardando sua resposta.",
+            "Vamos manter o foco. Sua contribuição é necessária."
+          ],
+          "competitivo": [
+            "Esta é sua oportunidade de se destacar. Continue respondendo.",
+            "Não pare agora. Sua resposta pode ser decisiva."
+          ],
+          "pragmatico": [
+            "Precisamos de uma resposta objetiva. Continue, por favor.",
+            "Sua experiência é relevante aqui. Prossiga com a explicação."
+          ],
+          "persuasivo": [
+            "Continue desenvolvendo seu argumento. Estamos ouvindo.",
+            "Sua resposta está no caminho certo. Finalize-a com clareza."
+          ],
+          "entusiasta": [
+            "Continue compartilhando. Sua energia é bem-vinda aqui.",
+            "Não interrompa seu raciocínio. Estamos atentos."
+          ],
+          "sociavel": [
+            "Fique à vontade para continuar. Queremos entender melhor.",
+            "Sua perspectiva é importante. Não deixe de compartilhá-la."
+          ],
+          "inspirador": [
+            "Continue explicando. Sua trajetória merece ser conhecida.",
+            "Não pare agora. Sua resposta pode trazer insights valiosos."
+          ],
+          "otimista": [
+            "Continue. Sua confiança é fundamental para esta etapa.",
+            "Estamos aqui para ouvir. Prossiga com sua explicação."
+          ],
+          "paciente": [
+            "Tome o tempo que precisar, mas continue respondendo.",
+            "Não há pressa. Continue quando se sentir preparado."
+          ],
+          "calmo": [
+            "Mantenha a tranquilidade. Continue com sua resposta.",
+            "Respire e prossiga. Sua experiência é relevante."
+          ],
+          "empatico": [
+            "Estamos aqui para entender. Continue quando se sentir pronto.",
+            "Sua resposta é importante. Não hesite em compartilhar."
+          ],
+          "cooperativo": [
+            "Diálogo é essencial. Continue com sua contribuição.",
+            "Sua colaboração é necessária. Prossiga, por favor."
+          ],
+          "dedicado": [
+            "Continue explicando. Estamos interessados em sua jornada.",
+            "Não pare agora. Sua dedicação é fundamental aqui."
+          ],
+          "analitico": [
+            "Continue apresentando sua lógica. Precisamos entendê-la.",
+            "Sua análise é importante. Não interrompa o raciocínio."
+          ],
+          "detalhista": [
+            "Detalhes são relevantes. Continue compartilhando-os.",
+            "Não omita informações. Sua resposta precisa ser completa."
+          ],
+          "metodico": [
+            "Continue estruturando sua resposta. A organização é bem-vinda.",
+            "Sua metodologia é importante. Prossiga com os detalhes."
+          ],
+          "perfeccionista": [
+            "Continue ajustando sua resposta. A precisão é valorizada.",
+            "Não deixe de compartilhar sua visão. Estamos ouvindo."
+          ],
+          "critico": [
+            "Continue avaliando sua própria resposta. É fundamental.",
+            "Sua autocrítica é relevante. Não pare agora."
+          ],
+          "observador": [
+            "Continue destacando os detalhes que considera importantes.",
+            "Sua percepção é necessária aqui. Prossiga."
+          ],
+          "encorajador": [
+            "Continue compartilhando. Todos têm algo valioso a contribuir.",
+            "Não desista da resposta. Estamos aqui para ouvir."
+          ],
+          "adaptavel": [
+            "Continue mostrando sua flexibilidade. É um diferencial.",
+            "Sua adaptação é importante. Não pare de explicar."
+          ],
+          "colaborativa": [
+            "Continue colaborando com sua resposta. É essencial.",
+            "Sua contribuição em equipe começa aqui. Prossiga."
+          ],
+          "diplomatica": [
+            "Continue com equilíbrio. Sua serenidade é valorizada.",
+            "Sua abordagem diplomática é necessária. Não pare."
+          ],
+          "curioso": [
+            "Continue explorando sua resposta. A curiosidade é bem-vinda.",
+            "Não deixe de compartilhar seu conhecimento. Estamos atentos."
+          ],
+          "energetico": [
+            "Continue com entusiasmo. Sua energia é bem-vinda aqui.",
+            "Não pare agora. Mantenha o ritmo da resposta."
+          ],
+          "orientado a resultados": [
+            "Continue focando nos resultados. São fundamentais.",
+            "Sua objetividade é necessária. Prossiga com a resposta."
+          ]
+        }
+      }
+    ]
+  }
