@@ -56,9 +56,9 @@ export default function AvaliacaoCandidato() {
         <section className="bg-white shadow rounded-lg p-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Pontuação Geral</h2>
           <div className="flex justify-center">
-            <div className="relative">
-              <div className="text-6xl font-extrabold text-blue-600">{data.score}</div>
-              <span className="absolute inset-x-0 bottom-0 text-center text-gray-500">/10</span>
+            <div className="flex gap-2">
+              <div className="text-6xl font-extrabold text-blue-600">{data.score}<span className="text-gray-500 text-2xl">/10</span>
+              </div>
             </div>
           </div>
         </section>
