@@ -1,48 +1,60 @@
-// componentes/FeedbackDetalhado.jsx
-import React from 'react';
+// src/components/avaliacaoPage/FeedbackDetalhado.jsx
+
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+const Section = ({ title, items }) => {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <div className="bg-white shadow rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 hover:bg-gray-200 focus:outline-none"
+      >
+        <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+        {open 
+          ? <ChevronUp className="w-5 h-5 text-gray-600" /> 
+          : <ChevronDown className="w-5 h-5 text-gray-600" />
+        }
+      </button>
+      {open && (
+        <ul className="px-6 py-4 space-y-2">
+          {items.map((txt, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="mt-1 w-2 h-2 bg-blue-600 rounded-full flex-shrink-0" />
+              <p className="text-gray-700">{txt}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 export default function FeedbackDetalhado({
-  score,
   feedbackComportamental = [],
   feedbackSituacional = [],
   feedbackTecnico = [],
   feedbackExpectativa = [],
-  recommendations = []
+  recommendations = [],
 }) {
-  const Section = ({ title, items }) => (
-    <div className="bg-white shadow rounded-lg p-6 mb-6">
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
-      <ul className="list-disc list-inside space-y-2 text-gray-700">
-        {items.length > 0
-          ? items.map((item, idx) => <li key={idx}>{item}</li>)
-          : <li className="italic text-gray-400">Nenhum item disponível.</li>
-        }
-      </ul>
-    </div>
-  );
-
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-8">
-      {/* Score geral */}
-      <div className="text-center bg-gradient-to-r from-blue-500 to-teal-400 text-white rounded-lg p-8 shadow-lg">
-        <h2 className="text-2xl font-bold mb-2">Score Geral</h2>
-        <p className="text-5xl font-extrabold">{score !== null ? score : '--'}</p>
-      </div>
-
-      {/* Feedback por categoria */}
+    <div className="space-y-6">
       <Section title="Feedback Comportamental" items={feedbackComportamental} />
-      <Section title="Feedback Situacional"    items={feedbackSituacional}    />
-      <Section title="Feedback Técnico"        items={feedbackTecnico}         />
-      <Section title="Feedback de Expectativa"  items={feedbackExpectativa}     />
+      <Section title="Feedback Situacional"   items={feedbackSituacional} />
+      <Section title="Feedback Técnico"        items={feedbackTecnico} />
+      <Section title="Feedback de Expectativas" items={feedbackExpectativa} />
 
-      {/* Recomendações */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">Recomendações</h3>
-        <ul className="list-decimal list-inside space-y-2 text-gray-700">
-          {recommendations.length > 0
-            ? recommendations.map((rec, idx) => <li key={idx}>{rec}</li>)
-            : <li className="italic text-gray-400">Sem recomendações.</li>
-          }
+        <h3 className="text-2xl font-semibold text-gray-800 mb-4">Recomendações Gerais</h3>
+        <ul className="space-y-2">
+          {recommendations.map((rec, idx) => (
+            <li key={idx} className="flex items-start gap-2">
+              <span className="mt-1 w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
+              <p className="text-gray-700">{rec}</p>
+            </li>
+          ))}
         </ul>
       </div>
     </div>
