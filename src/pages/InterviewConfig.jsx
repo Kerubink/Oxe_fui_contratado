@@ -83,6 +83,7 @@ export default function InterviewConfig() {
         // Adicione a conversão dos traits
         traits: convertTraits(personalityOptions[personality].interviewer.traits),
         level: personality,
+        img: personalityOptions[personality].img,
         label: personalityOptions[personality].label,
         mbti: personalityOptions[personality].mbti,
         disc: personalityOptions[personality].disc,
