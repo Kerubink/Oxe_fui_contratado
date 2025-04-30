@@ -66,10 +66,10 @@ ${cvSummary}
 ${jobDescSummary}
 
 **Estrutura da entrevista:**
-1. **2 perguntas comportamentais** (conhecer o candidato de um modo geral)
-2. **2 perguntas situacionais** (situações passadas/futuras pode começar com "O que você faria se…", "nome do candidato + como você reagiria se..." )
-3. **2 perguntas técnicas** (baseadas em CV + requisitos + descrição da vaga)
-4. **2 perguntas de expectativa** (pretensão salarial, crescimento, visão da empresa)
+1. **2 perguntas comportamentais** (conhecer o candidato de um modo geral) Foco: Explorar experiências passadas para identificar valores, habilidades interpessoais (ex.: comunicação, trabalho em equipe) e capacidade de adaptação.
+2. **2 perguntas situacionais** (situações passadas/futuras pode começar com "O que você faria se…", "nome do candidato + como você reagiria se...", etc... ) Foco: Avaliar raciocínio prático e resolução de problemas em cenários reais ou hipotéticos ligados ao cargo.
+3. **2 perguntas técnicas** (baseadas em CV + requisitos + descrição da vaga) Foco: Validar conhecimentos específicos (ferramentas, metodologias) e experiência prática relacionada às exigências da vaga.
+4. **2 perguntas de expectativa** (pretensão salarial, crescimento, visão da empresa, etc...) Foco: Alinhar objetivos do candidato com a cultura e oportunidades da empresa (ex.: flexibilidade salarial, plano de crescimento).
 
 **Regras de formatação:**
 - Retorne **apenas** um objeto JSON, sem nenhum outro texto, assim:
