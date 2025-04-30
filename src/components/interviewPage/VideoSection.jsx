@@ -1,31 +1,86 @@
-const VideoSection = ({ videoRef, userVisible }) => (
-  <div className="flex-1 flex items-center justify-center gap-4">
-    {/* Entrevistador */}
-    <div className="flex flex-col items-center relative bg-gray-800 rounded-lg w-1/2 h-1/2">
-      <img
-        src="/entrevistador.jpg"
-        alt="Entrevistador"
-        className="w-full h-full object-cover rounded-lg"
-      />
-      <span className="p-1.5 bg-neutral-800 text-white absolute bottom-0 left-0">
-        Entrevistador
-      </span>
-    </div>
+// src/components/interviewPage/VideoSection.jsx
+import React, { useState, useEffect } from "react";
+import localforage from "localforage";
 
-    {/* Candidato */}
-    <div className="flex flex-col items-center relative bg-gray-800 rounded-lg w-1/2 h-1/2">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        className="w-full h-full bg-black rounded-lg object-cover"
-      />
+const VideoSection = ({
+  videoRef,
+  userVisible,
+  interviewerSpeaking,
+  candidateSpeaking,
+  chatVisible,
+}) => {
+  const [interviewerImg, setInterviewerImg] = useState(null);
 
-      <span className="p-1.5 bg-neutral-800 text-white absolute bottom-0 left-0">
-        {localStorage.getItem("usuarioNome") || "Você"}
-      </span>
+  // Ao montar, busca a fichaEntrevista e extrai a URL da imagem
+  useEffect(() => {
+    let mounted = true;
+    localforage.getItem("fichaEntrevista")
+      .then(ficha => {
+        if (!mounted) return;
+        const img = ficha?.interviewer?.img;
+        setInterviewerImg(img || "/placeholder-entrevistador.png");
+      })
+      .catch(() => {
+        if (mounted) setInterviewerImg("/placeholder-entrevistador.png");
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  // Determina a largura com base em chatVisible
+  const widthClass = chatVisible
+    ? "w-[calc(100%-20rem)]"
+    : "w-full";
+
+  return (
+    <div className={`
+        ${widthClass} h-full flex flex-col md:flex-row
+        items-center justify-center gap-4 p-2
+        transition-all duration-300
+      `}
+    >
+      {/* Entrevistador */}
+      <div className={`
+          relative bg-gray-800 rounded-lg overflow-hidden
+          w-full md:w-1/2 aspect-video
+          border-2 transition-all duration-300
+          ${interviewerSpeaking
+            ? "border-blue-500 animate-pulse"
+            : "border-transparent"}
+        `}
+      >
+        <img
+          src={interviewerImg}
+          alt="Foto do Entrevistador"
+          className="object-cover w-full h-full"
+        />
+        <span className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+          Entrevistador
+        </span>
+      </div>
+
+      {/* Candidato */}
+      <div className={`
+          relative bg-gray-800 rounded-lg overflow-hidden
+          w-full md:w-1/2 aspect-video
+          border-2 transition-all duration-300
+          ${candidateSpeaking
+            ? "border-blue-500 animate-pulse"
+            : "border-transparent"}
+        `}
+      >
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={!userVisible}
+          className="object-cover w-full h-full bg-black"
+        />
+        <span className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+          {localStorage.getItem("usuarioNome") || "Você"}
+        </span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default VideoSection;

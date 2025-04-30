@@ -4,6 +4,7 @@ export const personalityOptions = {
     label: 'Mentor Acolhedor',
     mbti: 'ISFJ',
     disc: 'SC',
+    img: "/entrevistadores/AnaLucia.jpg",
     interviewer: {
       name: 'Ana Lúcia Fernandes',
       gender: 'Feminino',
@@ -15,6 +16,7 @@ export const personalityOptions = {
     label: 'Estrategista Visionário',
     mbti: 'ENTJ',
     disc: 'DC',
+    img: "/entrevistadores/RicardoAlmeida.jpg",
     interviewer: {
       name: 'Ricardo Almeida',
       gender: 'Masculino',
@@ -26,6 +28,7 @@ export const personalityOptions = {
     label: 'Dinamizador Criativo',
     mbti: 'ENFP',
     disc: 'ID',
+    img: "/entrevistadores/FernandaCastro.jpg",
     interviewer: {
       name: 'Fernanda Castro',
       gender: 'Feminino',
@@ -37,6 +40,7 @@ export const personalityOptions = {
     label: 'Especialista Rigoroso',
     mbti: 'ISTP',
     disc: 'CD',
+    img: "/entrevistadores/DrCarlos.jpg",
     interviewer: {
       name: 'Dr. Carlos Mendes',
       gender: 'Masculino',
@@ -48,6 +52,7 @@ export const personalityOptions = {
     label: 'Diplomata Relacional',
     mbti: 'INFJ',
     disc: 'SI',
+    img: "/entrevistadores/MarianaLima.jpg",
     interviewer: {
       name: 'Mariana Lima',
       gender: 'Feminino',
@@ -59,6 +64,7 @@ export const personalityOptions = {
     label: 'Executor Pragmático',
     mbti: 'ESTJ',
     disc: 'DC',
+    img: "/entrevistadores/RobertoNascimento  .jpg",
     interviewer: {
       name: 'Roberto Nascimento',
       gender: 'Masculino',
