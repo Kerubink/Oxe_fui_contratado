@@ -64,7 +64,7 @@ export const personalityOptions = {
     label: 'Executor Pragmático',
     mbti: 'ESTJ',
     disc: 'DC',
-    img: "/entrevistadores/RobertoNascimento  .jpg",
+    img: "/entrevistadores/RobertoNascimento.jpg",
     interviewer: {
       name: 'Roberto Nascimento',
       gender: 'Masculino',
