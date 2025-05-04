@@ -98,7 +98,7 @@ export default function InterviewConfig() {
     };
 
     await localforage.setItem("fichaEntrevista", ficha);
-    navigate("/loaing");
+    navigate("/loading");
   };
 
   return (
