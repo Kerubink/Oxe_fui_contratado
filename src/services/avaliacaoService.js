@@ -97,12 +97,12 @@ ${allQAs}
 Sua tarefa:
 1. Dê notas de 0 a 10 para:
    - Técnica: clareza e domínio do conteúdo técnico.
-   - Afinidade: alinhamento das respostas com o perfil do entrevistador (efeito auréola).
-   - Geral: média das duas anteriores.
+   - Afinidade: alinhamento das respostas com o perfil do entrevistador (efeito auréola, efeito halo, Viés de afinidade...).
+   - Geral: média das duas anteriores, considere a afinidade do candidato com a vaga, as habilidades tecnicas e a afinidade com o entrevistador.
 2. Para cada categoria (comportamental, situacional, técnica, expectativa), escreva 2–3 dicas construtivas.
 3. Forneça 3–5 recomendações práticas de estudo e prática para o candidato.
 4. Explique em 1–2 parágrafos o porquê de cada nota (fields: explanationTecnico, explanationAfinidade, explanationGeral).
-5. **Não** use “recomendo a contratação”. Foco no aprendizado do candidato.
+5. Não use “recomendo a contratação”. Foco no aprendizado do candidato.
 
 Retorne **apenas** um JSON válido neste formato:
 
