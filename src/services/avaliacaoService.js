@@ -1,135 +1,166 @@
-// serviços/avaliacaoService.js
-import localforage from 'localforage';
+// src/services/avaliacaoService.js
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY;
-const MODEL_NAME = 'gemini-2.0-flash-lite';
+import localforage from 'localforage'
 
-/**
- * Faz o parsing do texto bruto de avaliação retornado pela IA,
- * esperando seções marcadas com "### <Título>"
- */
-function parseEvaluationResponse(rawText) {
-  const sections = rawText
-    .split(/###\s*(?=[A-Za-z])/g)
-    .map(s => s.trim())
-    .filter(Boolean);
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY
+const MODEL_NAME     = 'gemini-2.0-flash-lite'
 
-  const result = {
-    score: 0,
-    feedbackComportamental: [],
-    feedbackSituacional: [],
-    feedbackTecnico: [],
-    feedbackExpectativa: [],
-    recommendations: []
-  };
 
-  sections.forEach(section => {
-    const [headerLine, ...bodyLines] = section.split('\n');
-    const title = headerLine.trim().toLowerCase();
-    const bullets = bodyLines
-      .map(l => l.replace(/^-+\s*/, '').trim())
-      .filter(Boolean);
-
-    if (title.includes('pontuação')) {
-      result.score = parseInt(bullets[0]?.match(/\d+/)?.[0] || '0', 10);
-    } else if (title.includes('comportament')) {
-      result.feedbackComportamental = bullets;
-    } else if (title.includes('situacion')) {
-      result.feedbackSituacional = bullets;
-    } else if (title.includes('técnic') || title.includes('tecnica')) {
-      result.feedbackTecnico = bullets;
-    } else if (title.includes('expectativ')) {
-      result.feedbackExpectativa = bullets;
-    } else if (title.includes('recomenda')) {
-      result.recommendations = bullets;
-    }
-  });
-
-  return result;
+function makeCacheKey(ficha, rawRoteiro) {
+  const payload = JSON.stringify({ ficha, rawRoteiro })
+  return 'avaliacao_' + encodeURIComponent(payload)
 }
 
 export async function avaliarCandidatoComGemini() {
-  // 1) carrega ficha e roteiro
-  const [ficha, roteiro] = await Promise.all([
-    localforage.getItem('fichaEntrevista'),
-    localforage.getItem('roteiroEntrevista')
-  ]);
-  if (!ficha) throw new Error('Ficha de entrevista não encontrada.');
-  if (!roteiro) throw new Error('Roteiro de entrevista não encontrado.');
+  // 1) Carrega ficha e roteiro
+  const ficha      = await localforage.getItem('fichaEntrevista')
+  const rawRoteiro = await localforage.getItem('roteiroEntrevista')
 
-  const {
-    cvSummary,
-    jobDescSummary,
-    interviewer: { name, label, disc, mbti, description, traits = [] }
-  } = ficha;
-
-  // 2) formata todas as Q&A
-  function formatQA(secao, arr) {
-    return arr
-      .map((p, i) => `Pergunta ${i+1} (${secao}): ${p.pergunta}\nResposta: ${p.resposta || '[sem resposta]'}`)
-      .join('\n\n');
+  if (!ficha) {
+    throw new Error('Ficha de entrevista não encontrada.')
   }
 
-  const allQAs = [
-    formatQA('comportamental', roteiro.inicio),
-    formatQA('situacional',    roteiro.meio),
-    formatQA('técnica',        roteiro.tecnicas),
-    formatQA('expectativa',    roteiro.encerramento)
-  ].join('\n\n');
+  // 2) Monta chave de cache
+  const cacheKey = makeCacheKey(ficha, rawRoteiro)
+  const cached   = await localforage.getItem(cacheKey)
+  if (cached) {
+    // console.log('Usando avaliação em cache para', cacheKey)
+    return cached
+  }
 
-  // 3) monta prompt de avaliação
+  // 3) Extrai dados da ficha
+  const {
+    interviewer    = {},
+    jobDescSummary = '',
+    cvSummary      = '',
+    jobTitle       = ''
+  } = ficha
+  const traits = interviewer.traits || []
+
+  // 4) “Achata” o roteiro (concatena início, meio, técnicas e encerramento)
+  let perguntas = []
+  if (
+    rawRoteiro &&
+    ['inicio','meio','tecnicas','encerramento']
+      .every(sec => Array.isArray(rawRoteiro[sec]))
+  ) {
+    perguntas = [
+      ...rawRoteiro.inicio,
+      ...rawRoteiro.meio,
+      ...rawRoteiro.tecnicas,
+      ...rawRoteiro.encerramento
+    ]
+  }
+
+  // 5) Se não houver respostas, retorno de fallback (e também cacheamos)
+  if (perguntas.length === 0) {
+    const vazio = {
+      scoreGeral: 0,
+      scoreTecnico: 0,
+      scoreAfinidade: 0,
+      feedbackComportamental: [],
+      feedbackSituacional: [],
+      feedbackTecnico: [],
+      feedbackExpectativa: [],
+      recommendations: [
+        'Responda às perguntas simuladas para receber feedback personalizado.'
+      ],
+      explanationTecnico: '',
+      explanationAfinidade: '',
+      explanationGeral: ''
+    }
+    await localforage.setItem(cacheKey, vazio)
+    return vazio
+  }
+
+  // 6) Monta o bloco Q&A
+  const allQAs = perguntas
+    .map(q => `Q: ${q.pergunta}\nA: ${q.resposta || '[Sem resposta]'}`)
+    .join('\n\n')
+
+  // 7) Prompt detalhado
   const prompt = `
-**Instruções do Sistema**
-Você é um avaliador técnico sênior que considera o **efeito auréola**:
-O entrevistador é ${name}, perfil DISC (${disc}), MBTI (${mbti}), estilo "${label}", traços: ${traits.join(', ')}. Ele valoriza empatia, feedback construtivo e crescimento gradual.
+Você é um coach de entrevistas para desenvolvedores que ajuda candidatos a praticar e evoluir.
 
-**Contexto da vaga:** ${jobDescSummary}
-**Resumo do CV:** ${cvSummary}
+Entrevistador simulado: ${interviewer.name || '—'} (DISC: ${interviewer.disc || '—'}, MBTI: ${interviewer.mbti || '—'}, descrição do entrevistador: ${interviewer.description || '—'}, estilo: ${interviewer.label || '—'}; traços de personalidade: ${traits.join(', ')})
+Vaga: ${jobTitle}
 
-**Q&A da entrevista**  
+Contexto da vaga:
+${jobDescSummary}
+
+Resumo do CV:
+${cvSummary}
+
+Respostas do candidato:
 ${allQAs}
 
-**Formato de saída (use estes títulos)**
+Sua tarefa:
+1. Dê notas de 0 a 10 para:
+   - Técnica: clareza e domínio do conteúdo técnico.
+   - Afinidade: alinhamento das respostas com o perfil do entrevistador (efeito auréola).
+   - Geral: média das duas anteriores.
+2. Para cada categoria (comportamental, situacional, técnica, expectativa), escreva 2–3 dicas construtivas.
+3. Forneça 3–5 recomendações práticas de estudo e prática para o candidato.
+4. Explique em 1–2 parágrafos o porquê de cada nota (fields: explanationTecnico, explanationAfinidade, explanationGeral).
+5. **Não** use “recomendo a contratação”. Foco no aprendizado do candidato.
 
-### Pontuação
-nota de 0 a 10
+Retorne **apenas** um JSON válido neste formato:
 
-### Feedback Comportamental
-- 3 bullet points
+\`\`\`json
+{
+  "scoreGeral": number,
+  "scoreTecnico": number,
+  "scoreAfinidade": number,
+  "feedbackComportamental": [string],
+  "feedbackSituacional": [string],
+  "feedbackTecnico": [string],
+  "feedbackExpectativa": [string],
+  "recommendations": [string],
+  "explanationTecnico": string,
+  "explanationAfinidade": string,
+  "explanationGeral": string
+}
+\`\`\`
+`.trim()
 
-### Feedback Situacional
-- 3 bullet points
-
-### Feedback Técnico
-- 3 bullet points
-
-### Feedback de Expectativa
-- 2 bullet points
-
-### Recomendações
-- 3 ações específicas
-`.trim();
-
-  // 4) chamada única à API
+  // 8) Chama a API Gemini (generateContent)
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`, {
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`,
+    {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 1500, topP: 0.95 },
-        safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }]
+        generationConfig: {
+          temperature:    0.7,
+          maxOutputTokens: 1500,
+          topP:           0.9
+        },
+        safetySettings: [{
+          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+          threshold: 'BLOCK_NONE'
+        }]
       })
     }
-  );
+  )
+
   if (!response.ok) {
-    const e = await response.json();
-    throw new Error(`API Error: ${e.error?.message || response.statusText}`);
+    const err = await response.json().catch(() => ({}))
+    throw new Error(`Erro na API: ${err.error?.message || response.statusText}`)
   }
 
-  // 5) parse e retorno
-  const { candidates } = await response.json();
-  const rawText = candidates?.[0]?.content?.parts?.[0]?.text || '';
-  console.log('Avaliação bruta:', rawText);
-  return parseEvaluationResponse(rawText);
+  // 9) Extrai e parseia o JSON da resposta
+  const { candidates } = await response.json()
+  const rawText = candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const start = rawText.indexOf('{')
+  const end   = rawText.lastIndexOf('}')
+  if (start < 0 || end <= start) {
+    console.error('Resposta bruta da IA:', rawText)
+    throw new Error('Não foi possível encontrar um JSON válido na resposta.')
+  }
+  const parsed = JSON.parse(rawText.slice(start, end + 1))
+
+  // 10) Armazena no cache e retorna
+  await localforage.setItem(cacheKey, parsed)
+  return parsed
 }
