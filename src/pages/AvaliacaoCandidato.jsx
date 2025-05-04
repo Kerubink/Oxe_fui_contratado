@@ -1,12 +1,14 @@
+// src/pages/AvaliacaoCandidato.jsx
 import React, { useState, useEffect } from 'react'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import FeedbackDetalhado from '../components/avaliacaoPage/FeedbackDetalhado'
+import ScoreExplanation from '../components/avaliacaoPage/ScoreExplanation'
 import { avaliarCandidatoComGemini } from '../services/avaliacaoService'
 
 export default function AvaliacaoCandidato() {
-  const [data, setData]       = useState(null)
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [erro, setErro]       = useState(null)
+  const [erro, setErro] = useState(null)
 
   useEffect(() => {
     ;(async () => {
@@ -44,40 +46,51 @@ export default function AvaliacaoCandidato() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <header className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">Avaliação do Candidato</h1>
+          <h1 className="text-4xl font-bold text-gray-900">
+            Avaliação da Entrevista Simulada
+          </h1>
           <p className="mt-2 text-gray-600">
-            Aqui está o seu feedback detalhado e recomendações de melhoria.
+            Suas pontuações, explicações e orientações para evoluir.
           </p>
         </header>
 
-        {/* Scores */}
-        <section className="bg-white shadow rounded-lg p-6 space-y-4">
+        {/* Scores e Explicações */}
+        <section className="bg-white shadow rounded-lg p-6 space-y-6">
           <h2 className="text-2xl font-semibold text-gray-800">Pontuações</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Técnica */}
+            <div className="text-center">
               <p className="text-gray-500">Técnica</p>
               <p className="text-4xl font-extrabold text-blue-600">
                 {data.scoreTecnico.toFixed(1)}/10
               </p>
+              <ScoreExplanation text={data.explanationTecnico} />
             </div>
-            <div>
+            {/* Afinidade */}
+            <div className="text-center">
               <p className="text-gray-500">Afinidade</p>
               <p className="text-4xl font-extrabold text-green-600">
                 {data.scoreAfinidade.toFixed(1)}/10
               </p>
+              <ScoreExplanation text={data.explanationAfinidade} />
             </div>
-            <div>
+            {/* Geral */}
+            <div className="text-center">
               <p className="text-gray-500">Geral</p>
               <p className="text-4xl font-extrabold text-indigo-600">
                 {data.scoreGeral.toFixed(1)}/10
               </p>
+              <ScoreExplanation text={data.explanationGeral} />
             </div>
           </div>
         </section>
 
         {/* Feedback Detalhado */}
         <FeedbackDetalhado
-          feedbacks={data.feedbacks}
+          feedbackComportamental={data.feedbackComportamental}
+          feedbackSituacional={data.feedbackSituacional}
+          feedbackTecnico={data.feedbackTecnico}
+          feedbackExpectativa={data.feedbackExpectativa}
           recommendations={data.recommendations}
         />
       </div>
