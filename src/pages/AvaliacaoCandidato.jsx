@@ -1,27 +1,25 @@
-// src/pages/AvaliacaoCandidato.jsx
-
-import React, { useState, useEffect } from 'react';
-import { Loader2, AlertTriangle } from 'lucide-react';
-import FeedbackDetalhado from '../components/avaliacaoPage/FeedbackDetalhado';
-import { avaliarCandidatoComGemini } from '../services/avaliacaoService';
+import React, { useState, useEffect } from 'react'
+import { Loader2, AlertTriangle } from 'lucide-react'
+import FeedbackDetalhado from '../components/avaliacaoPage/FeedbackDetalhado'
+import { avaliarCandidatoComGemini } from '../services/avaliacaoService'
 
 export default function AvaliacaoCandidato() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState(null);
+  const [data, setData]       = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro]       = useState(null)
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
-        const result = await avaliarCandidatoComGemini();
-        setData(result);
+        const result = await avaliarCandidatoComGemini()
+        setData(result)
       } catch (err) {
-        setErro(err.message);
+        setErro(err.message)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    })();
-  }, []);
+    })()
+  }, [])
 
   if (loading) {
     return (
@@ -29,7 +27,7 @@ export default function AvaliacaoCandidato() {
         <Loader2 className="animate-spin w-12 h-12 text-blue-600" />
         <span className="ml-4 text-lg text-gray-700">Carregando avaliação...</span>
       </div>
-    );
+    )
   }
 
   if (erro) {
@@ -38,7 +36,7 @@ export default function AvaliacaoCandidato() {
         <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
         <p className="text-red-600 text-lg">{erro}</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -52,26 +50,37 @@ export default function AvaliacaoCandidato() {
           </p>
         </header>
 
-        {/* Score Section */}
-        <section className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Pontuação Geral</h2>
-          <div className="flex justify-center">
-            <div className="flex gap-2">
-              <div className="text-6xl font-extrabold text-blue-600">{data.score}<span className="text-gray-500 text-2xl">/10</span>
-              </div>
+        {/* Scores */}
+        <section className="bg-white shadow rounded-lg p-6 space-y-4">
+          <h2 className="text-2xl font-semibold text-gray-800">Pontuações</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+            <div>
+              <p className="text-gray-500">Técnica</p>
+              <p className="text-4xl font-extrabold text-blue-600">
+                {data.scoreTecnico.toFixed(1)}/10
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-500">Afinidade</p>
+              <p className="text-4xl font-extrabold text-green-600">
+                {data.scoreAfinidade.toFixed(1)}/10
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-500">Geral</p>
+              <p className="text-4xl font-extrabold text-indigo-600">
+                {data.scoreGeral.toFixed(1)}/10
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Detailed Feedback */}
+        {/* Feedback Detalhado */}
         <FeedbackDetalhado
-          feedbackComportamental={data.feedbackComportamental}
-          feedbackSituacional={data.feedbackSituacional}
-          feedbackTecnico={data.feedbackTecnico}
-          feedbackExpectativa={data.feedbackExpectativa}
+          feedbacks={data.feedbacks}
           recommendations={data.recommendations}
         />
       </div>
     </div>
-  );
+  )
 }
