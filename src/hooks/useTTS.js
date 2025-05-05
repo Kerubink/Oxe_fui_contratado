@@ -8,26 +8,26 @@ export function useTTS() {
   const queueRef = useRef([]);
   const playingRef = useRef(false);
   const voicesRef = useRef([]);
-  // Mantém referências para evitar GC prematuro :contentReference[oaicite:5]{index=5}
-  const utterancesRef = useRef([]);
+  const utterancesRef = useRef([]); // previne GC prematuro
 
-  const MAX_CHUNK_LENGTH = 200;
+  const MAX_CHUNK_LENGTH = 150; // margem de segurança abaixo de 200 chars
 
-  // 1) Carrega vozes e prioriza locais :contentReference[oaicite:6]{index=6}
+  // Carrega vozes e prioriza locais
   useEffect(() => {
     const loadVoices = () => {
       const all = window.speechSynthesis.getVoices();
-      // Prioriza vozes locais
-      voicesRef.current = all.filter(v => v.localService).concat(all.filter(v => !v.localService));
+      voicesRef.current = [
+        ...all.filter(v => v.localService),
+        ...all.filter(v => !v.localService)
+      ];
     };
     window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
     loadVoices();
-    return () => {
+    return () =>
       window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
-    };
   }, []);
 
-  // 2) Divide o texto em chunks sem cortar frases
+  // Fragmenta texto em chunks ≤ MAX_CHUNK_LENGTH sem cortar frases
   const splitTextIntoChunks = (text) => {
     const sentences = text.match(/[^.!?]+[.!?]+|\s*\n\s*|.+$/g) || [];
     const chunks = [];
@@ -47,17 +47,23 @@ export function useTTS() {
     return chunks;
   };
 
-  // 3) Fala um chunk nativamente, chamando resume para evitar hang :contentReference[oaicite:7]{index=7}
+  // Fala um chunk nativamente, com resume em onstart e onboundary
   const speakChunkNative = (chunk, voice) => {
     return new Promise((resolve, reject) => {
       const utt = new SpeechSynthesisUtterance(chunk);
       utt.lang = "pt-BR";
       if (voice) utt.voice = voice;
-      // Armazena referência para evitar GC
       utterancesRef.current.push(utt);
+
       utt.onstart = () => {
-        // Garanta estado não-pausado
-        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+      };
+      utt.onboundary = () => {
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
       };
       utt.onend = resolve;
       utt.onerror = reject;
@@ -65,31 +71,28 @@ export function useTTS() {
     });
   };
 
-  // 4) Fallback externo em chunks completos
+  // Fallback completo em chunks via endpoint /api/tts
   const speakChunkFallback = async (text) => {
     const chunks = splitTextIntoChunks(text);
     for (const chunk of chunks) {
-      const snippet = encodeURIComponent(chunk);
-      const res = await fetch(`/api/tts?text=${snippet}`);
+      const res = await fetch(`/api/tts?text=${encodeURIComponent(chunk)}`);
       if (!res.ok) throw new Error("Fallback TTS falhou");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      await new Promise((resolve, reject) => {
+      await new Promise((resA, rejA) => {
         const audio = new Audio(url);
         audioRef.current = audio;
-        audio.onended = resolve;
-        audio.onerror = reject;
+        audio.onended = resA;
+        audio.onerror = rejA;
         audio.play();
       });
     }
   };
 
-  // 5) Processa fila, sempre reiniciando em finally :contentReference[oaicite:8]{index=8}
+  // Processa a fila de chunks, sempre reiniciando em finally
   const processQueue = async () => {
     if (playingRef.current || queueRef.current.length === 0) {
-      if (!playingRef.current && queueRef.current.length === 0) {
-        setTtsPlaying(false);
-      }
+      if (!playingRef.current) setTtsPlaying(false);
       return;
     }
 
@@ -98,14 +101,13 @@ export function useTTS() {
     const { text, callback } = queueRef.current.shift();
 
     try {
-      // Lê gênero do entrevistador
+      // Seleciona voz pt-BR por gênero armazenado
       let gender = null;
       try {
         const ficha = await localforage.getItem("fichaEntrevista");
         gender = ficha?.interviewer?.gender || null;
       } catch {}
 
-      // Seleciona voz pt-BR :contentReference[oaicite:9]{index=9}
       const ptVoices = voicesRef.current.filter(v => v.lang.startsWith("pt"));
       let chosen = null;
       if (gender === "Feminino") {
@@ -115,18 +117,15 @@ export function useTTS() {
       }
       chosen = chosen || ptVoices[0] || null;
 
-      // Cancela apenas uma vez antes de falar o primeiro chunk :contentReference[oaicite:10]{index=10}
+      // Cancela apenas uma vez antes do primeiro chunk
       window.speechSynthesis.cancel();
 
       // Fala nativamente em chunks
-      const chunks = splitTextIntoChunks(text);
-      for (const chunk of chunks) {
-        // Se pausado, retoma :contentReference[oaicite:11]{index=11}
-        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+      for (const chunk of splitTextIntoChunks(text)) {
         await speakChunkNative(chunk, chosen);
       }
     } catch (nativeErr) {
-      console.warn("Erro no TTS nativo:", nativeErr);
+      console.warn("TTS nativo falhou:", nativeErr);
       try {
         await speakChunkFallback(text);
       } catch (fallbackErr) {
@@ -134,19 +133,33 @@ export function useTTS() {
       }
     } finally {
       if (typeof callback === "function") {
-        try { callback(); } catch {}
+        try {
+          callback();
+        } catch {}
       }
       playingRef.current = false;
-      processQueue(); // reinicia fila :contentReference[oaicite:12]{index=12}
+      processQueue();
     }
   };
 
-  // 6) API pública para enfileirar texto
-  const playTTS = (text, callback) => {
-    queueRef.current.push({ text, callback });
-    // Se estiver pausado, retoma antes de enfileirar
-    if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-    processQueue();
+  // Reseta a fila antes de cada mensagem nova
+  const resetQueue = () => {
+    window.speechSynthesis.cancel();
+    queueRef.current = [];
+    utterancesRef.current = [];
+  };
+
+  // API pública: enfileira apenas os chunks desta única mensagem
+  const playTTS = (text) => {
+    return new Promise((resolve) => {
+      resetQueue();
+      for (const chunk of splitTextIntoChunks(text)) {
+        queueRef.current.push({ text: chunk, callback: null });
+      }
+      // ao fim de todos os chunks, resolve a Promise
+      queueRef.current.push({ text: "", callback: resolve });
+      processQueue();
+    });
   };
 
   return {
