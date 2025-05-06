@@ -94,6 +94,10 @@ ${cvSummary}
 Respostas do candidato:
 ${allQAs}
 
+**Penalização automática**: 
+- Se a resposta tiver menos de 20 palavras e/ou não contiver exemplos específicos e detalhes, **atribua 0** em Técnica e Afinidade.
+
+
 Sua tarefa:
 1. Dê notas de 0 a 10 para:
    - Técnica: clareza e domínio do conteúdo técnico.
@@ -103,6 +107,9 @@ Sua tarefa:
 3. Forneça 3–5 recomendações práticas de estudo e prática para o candidato.
 4. Explique em 1–2 parágrafos o porquê de cada nota (fields: explanationTecnico, explanationAfinidade, explanationGeral).
 5. Não use “recomendo a contratação”. Foco no aprendizado do candidato.
+6. Utilize de penalidades extremas para a avaliação de afinidade e tecnica caso a resposta não se encaixar ao que foi perguntado (pode usar 0 sem problemas)
+7. simplesmente não aceite respostas genericas ou sem sentido e nesses casos use a penalidade extrema.
+
 
 Retorne **apenas** um JSON válido neste formato:
 
