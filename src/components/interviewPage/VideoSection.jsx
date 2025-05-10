@@ -10,6 +10,8 @@ const VideoSection = ({
   chatVisible,
 }) => {
   const [interviewerImg, setInterviewerImg] = useState(null);
+    const [interviewerName, setInterviewerName] = useState("Entrevistador");
+  
 
   // Ao montar, busca a fichaEntrevista e extrai a URL da imagem
   useEffect(() => {
@@ -24,6 +26,14 @@ const VideoSection = ({
         if (mounted) setInterviewerImg("/placeholder-entrevistador.png");
       });
     return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    localforage.getItem("fichaEntrevista").then((data) => {
+      if (data?.interviewer?.name) {
+        setInterviewerName(`${data.interviewer.name}`);
+      }
+    });
   }, []);
 
   // Determina a largura com base em chatVisible
@@ -54,7 +64,7 @@ const VideoSection = ({
           className="object-cover w-full h-full"
         />
         <span className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-sm">
-          Entrevistador
+        {interviewerName}
         </span>
       </div>
 

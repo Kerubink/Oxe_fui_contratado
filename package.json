@@ -39,6 +39,8 @@
     "stopword": "^3.1.4",
     "stopwords-pt": "^0.3.0",
     "tailwindcss": "^4.1.4",
+    "textrank": "github:dpressel/textrank-js",
+    "ts-textrank": "^1.0.3",
     "zod": "^3.24.3"
   },
   "devDependencies": {
