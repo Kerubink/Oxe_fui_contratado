@@ -1,5 +1,5 @@
 // src/pages/InterviewScreen.jsx
-import React from "react";
+import React, { useState } from "react";
 import { useInterviewEngine } from "../hooks/useInterviewEngine";
 import StartScreen from "../components/interviewPage/StartScreen";
 import InterviewHeader from "../components/interviewPage/InterviewHeader";
@@ -8,6 +8,9 @@ import ChatPanel from "../components/interviewPage/ChatPanel";
 import ControlsFooter from "../components/interviewPage/ControlsFooter";
 
 export default function InterviewScreen() {
+  // estado local para controlar se o timer aparece ou não
+  const [showTimer, setShowTimer] = useState(true);
+
   const {
     videoRef,
     micOn,
@@ -27,16 +30,21 @@ export default function InterviewScreen() {
     interviewStarted,
   } = useInterviewEngine();
 
-  if (!interviewStarted) return <StartScreen onStart={startInterview} />;
+  // se ainda não iniciou, mostra a tela de início
+  if (!interviewStarted) {
+    return <StartScreen onStart={startInterview} />;
+  }
 
   return (
     <div className="h-screen flex flex-col bg-neutral-900 relative">
+      {/* componente de áudio (TTS) */}
       <audio ref={videoRef} hidden />
 
-      <InterviewHeader />
+      {/* Header recebe showTimer para exibir ou ocultar o cronômetro */}
+      <InterviewHeader showTimer={showTimer} />
 
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Vídeo: passa chatVisible para ajustar largura */}
+        {/* Vídeo principal */}
         <VideoSection
           videoRef={videoRef}
           userVisible={userVisible}
@@ -45,7 +53,7 @@ export default function InterviewScreen() {
           chatVisible={chatVisible}
         />
 
-        {/* Chat absoluto que desliza por cima/parcialmente */}
+        {/* Chat deslizante */}
         <div
           className={`
             absolute top-0 right-0 h-full
@@ -65,6 +73,7 @@ export default function InterviewScreen() {
         </div>
       </div>
 
+      {/* Footer, agora com toggleTimerVisibility */}
       <ControlsFooter
         micOn={micOn}
         camOn={camOn}
@@ -72,6 +81,7 @@ export default function InterviewScreen() {
         toggleMic={toggleMic}
         setCamOn={setCamOn}
         setChatVisible={setChatVisible}
+        toggleTimerVisibility={() => setShowTimer((v) => !v)}
       />
     </div>
   );
